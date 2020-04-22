@@ -154,23 +154,26 @@ class Company extends CI_Controller
 
 	public function checkUEN(){
 		$data = file_get_contents('php://input');
-		if(is_null($data)){
+		$uen = json_decode($data,true);
+		if(is_null($uen)){
 			http_response_code(400);
 			echo json_encode(array( "status" => false, "message" => 'Bad Request'));exit;
 		}else{
-			//$validToken = $this->validToken();
-			$uen = json_decode($data,true);
+			$validToken = $this->validToken();
 			$notExists = $this->company_model->checkUEN($uen['uen']);
-			if($notExists){
-				http_response_code('200');
-				echo json_encode(array( "status" => true, "message" => "Success", 
-				"data" => $notExists));exit;
+			if($notExists === true){
+				http_response_code(200);
+				echo json_encode(array( "status" => true, "message" => "Success"));exit;
+			}else{
+				http_response_code(200);
+				echo json_encode(array( "status" => true, "message" => "UEN not found"));exit;
 			}
 		}
 	}
 
 	public function newApplication(){
 		$data = file_get_contents('php://input');
+
 		if(is_null($data)){
 			http_response_code(400);
 			echo json_encode(array( "status" => false, "message" => 'Bad Request'));exit;
