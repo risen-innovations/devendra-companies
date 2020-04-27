@@ -57,6 +57,90 @@ class Company extends CI_Controller
 		$company = $this->company_model->getCompanyListsName($search);
 	}
 
+	public function getCategories(){
+		$validToken = $this->validToken();
+		$courses_db = $this->load->database('courses',TRUE);
+		$sql = $courses_db->select('id, trade_type_name')->from('trade_type')
+				->order_by('trade_type_name','asc')->get();
+		$cats = array();
+		foreach($sql->result() as $cat){
+			$cats[] = $cat;
+		}
+		if(is_null($cats)){
+			$this->show_400();
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$cats));exit;
+		}
+	}
+
+	public function getCourses(){
+		$validToken = $this->validToken();
+		$courses_db = $this->load->database('courses',TRUE);
+		$sql = $courses_db->select('id, course_name')->from('courses')
+				->order_by('course_name','asc')->get();
+		$courses = array();
+		foreach($sql->result() as $course){
+			$courses[] = $course;
+		}
+		if(is_null($courses)){
+			$this->show_400();
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$courses));exit;
+		}
+	}
+
+	public function getCompanies(){
+		$validToken = $this->validToken();
+		$sql = $this->db->select('company_id, company_name')->from('company')
+				->order_by('company_name','asc')->get();
+		$companies = array();
+		foreach($sql->result() as $co){
+			$companies[] = $co;
+		}
+		if(is_null($companies)){
+			$this->show_400();
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$companies));exit;
+		}
+	}
+
+	public function getSalespersons(){
+		$validToken = $this->validToken();
+		$account_db = $this->load->database('account', TRUE);
+		$sql = $account_db->select('user_id, name')->from('accounts')
+				->order_by('name','asc')->get();
+		$salespersons = array();
+		foreach($sql->result() as $salesperson){
+			$salespersons[] = $salesperson;
+		}
+		if(is_null($salespersons)){
+			$this->show_400();
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$salespersons));exit;
+		}
+	}
+
+	public function getStatuses(){
+		$validToken = $this->validToken();
+		$sql = $this->db->select('application_status_id, application_status_name'
+				)->from('application_status')
+				->order_by('application_status_name','asc')->get();
+		$statuses = array();
+		foreach($sql->result() as $status){
+			$statuses[] = $status;
+		}
+		if(is_null($statuses)){
+			$this->show_400();
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$statuses));exit;
+		}
+	}
+
 	public function autofill(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
@@ -145,11 +229,15 @@ class Company extends CI_Controller
 
 	//list all the applications on http://localhost:3000/app/sales/applications
 	public function applications(){
-		//$validToken  = $this->validToken();
+		$validToken  = $this->validToken();
 		$applications = $this->company_model->applications();
-		if($applications){
-			http_response_code('200');
-		}
+	}
+
+	public function filterApplications(){
+		$validToken  = $this->validToken();
+		$data = file_get_contents('php://input');
+		$searchKeyword = json_decode($data,true);
+		$applications = $this->company_model->filterApplications($searchKeyword);
 	}
 
 	public function checkUEN(){

@@ -181,6 +181,75 @@ class Company_model extends CI_Model
 		}
 	}
 
+	public function filterApplications($searchKeyword){
+		$courses_db = $this->load->database('courses',true);
+		$account_db = $this->load->database('account',true);
+
+		$this->db->select('*, a.id as id, a.company_id as company_id
+		,a.datetime_created as datetime_created')
+		->from('application a')
+		->join('company cy','a.company_id = cy.company_id','left')
+		->join('application_status as','a.status = as.application_status_id','left');
+		if($searchKeyword['filter_column'] == 'company'){
+			$this->db->where('a.company_id', $searchKeyword['filter_value']);
+		}
+		if($searchKeyword['filter_column'] == 'status'){
+			$this->db->where('a.status', $searchKeyword['filter_value']);
+		}
+		if($searchKeyword['filter_column'] == 'sales'){
+			$this->db->where('a.created_by', $searchKeyword['filter_value']);
+		}
+		$this->db->order_by('a.datetime_created','desc');
+		$res = $this->db->get();
+		$applications = array();
+		if($res->num_rows() > 0){
+			foreach($res->result() as $row){
+				$newDate = $row->datetime_created;
+				$newDate = new DateTime($newDate);
+				$date = $newDate->format('d-m-Y');
+				$time = $newDate->format('H:i');
+				$row->date = $date;
+				$row->time = $time.' HR';
+
+				$courses_db->select('c.course_name, tt.trade_type_name')
+				->from('courses c')
+				->join('trade_type tt','c.trade_type = tt.id', 'left')
+				->where('c.id', $row->course_id);
+				if($searchKeyword['filter_column'] == 'category'){
+					$courses_db->where('tt.id', $searchKeyword['filter_value']);
+				}
+				if($searchKeyword['filter_column'] == 'course'){
+					$courses_db->where('c.id', $searchKeyword['filter_value']);
+				}
+				$course_res = $courses_db->get()->row();
+				if(empty($course_res)){
+					$applications = [];
+					echo json_encode($applications);
+					exit;
+				}
+				$personnel_res = $account_db->select('*')->from('accounts a')
+						->where('a.user_id',$row->created_by)
+						->get()->row();
+				if(empty($personnel_res)){
+					$applications = [];
+					echo json_encode($applications);
+					exit;
+				}
+
+				$row->course_name = $course_res->course_name;
+				$row->trade_type_name = $course_res->trade_type_name;
+				$row->personnel = $personnel_res->name;
+				$applications[] = $row;
+			}
+		}
+		if(empty($applications)){
+			$this->show_204();
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$applications));exit;
+		}
+	}
+
 	public function newApplication($applicationData)
 	{
 		//learner
@@ -293,7 +362,7 @@ class Company_model extends CI_Model
 	}
 
 	private function show_204(){
-		http_response_code('204');
+		http_response_code('200');
 		echo json_encode(array( "status" => false, "message" => 'No Content Found.'));exit;
 	}
 

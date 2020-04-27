@@ -57,6 +57,13 @@ $route['company/check-uen'] = 'company/checkUEN';
 $route['company/company-lists'] = 'company/companyList';
 $route['company/new-application'] = 'company/newApplication';
 $route['company/get-application'] = 'company/getApplication';
+$route['company/get-categories'] = 'company/getCategories';
+$route['company/get-companies'] = 'company/getCompanies';
+$route['company/get-courses'] = 'company/getCourses';
+$route['company/get-salespersons'] = 'company/getSalespersons';
+$route['company/get-statuses'] = 'company/getStatuses';
+$route['company/filter-applications'] = 'company/filterApplications';
+
 $route['company/payment-terms'] = 'company/paymentTerms';
 $route['company/company-lists-filter'] = 'company/companyListFilter';
 $route['company/company-lists-name'] = 'company/companyListName';
