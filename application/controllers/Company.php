@@ -260,6 +260,7 @@ class Company extends CI_Controller
 	}
 
 	public function newApplication(){
+		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 
 		if(is_null($data)){

@@ -78,3 +78,7 @@ $route['company/view-learner-managers'] = 'company/viewLearnerManagers';
 $route['company/deactivate-learner'] = 'company/deactivateLearner';
 $route['company/deactivate-learner-manager'] = 'company/deactivateLearnerManager';
 
+$route['learners/get-learners'] = 'learners/getLearners';
+$route['learners/get-learner'] = 'learners/getLearner';
+$route['learners/get-learner-doc'] = 'learners/getLearnerDoc';
+$route['learners/update-learner'] = 'learners/updateLearner';
