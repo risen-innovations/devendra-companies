@@ -107,6 +107,32 @@ class Company extends CI_Controller
 		}
 	}
 
+	public function getCompanyLearners(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$company = json_decode($data,true);
+		$learners = $this->db->select('*')->from('learner')
+					->where('company', $company['company_id'])
+					->get();
+		if($learners->num_rows() > 0){
+			http_response_code('200');
+			echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$learners->result()));exit;
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status"=> false, "message" => "No Learners Found"));exit;
+		}
+	}
+
+	public function deactivateCompany(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$deactivate = json_decode($data,true);
+		$this->db->where('company_id',$deactivate['company_id']);
+		$this->db->update('company',array('status' => 0));
+		http_response_code('200');
+		echo json_encode(array("status" => true, "message" => "Company Deleted"));exit;
+	}
+
 	public function getSalespersons(){
 		$validToken = $this->validToken();
 		$account_db = $this->load->database('account', TRUE);

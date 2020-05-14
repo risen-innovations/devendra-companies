@@ -18,12 +18,15 @@ class Company_model extends CI_Model
 		if($search['filter_by_name'] == ''){
 			$company = $this->db->select('*')->from('company c')
 			->join('status s','c.status = s.status_id')
+			->where('c.status != 0')
 			->order_by('c.'.$search['name'],$search['sorting'])
 			->get();
 		}else{
 			$company = $this->db->select('*')->from('company c')
 			->join('status s','c.status = s.status_id')
 			->where('c.id',$search['filter_by_value'])
+			->join('status s','c.status = s.status_id')
+			->where('c.status != 0')
 			->order_by('c.'.$search['name'],$search['sorting'])->get();
 		}
 		http_response_code('200');
