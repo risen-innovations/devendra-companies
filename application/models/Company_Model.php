@@ -284,7 +284,12 @@ class Company_model extends CI_Model
 		}
 
 		//application table
-		$company_id = $co_data['company_id'] ?: $applicationData['company'];
+		if(isset($applicationData['company'])){
+			$company_id = $applicationData['company'];
+		}
+		if(isset($co_data['company_id'])){
+			$company_id = $co_data['company_id'];
+		}
 		$app_data['application_id'] = md5(date("Y/m/d h:i:s"),false);
 		$app_data['quotation_id'] = $applicationData['quotation'];
 		$app_data['course_id'] = $applicationData['course'];
@@ -306,6 +311,7 @@ class Company_model extends CI_Model
 
 	public function getApplication($application){
 		$courses_db = $this->load->database('courses', true);
+		$sales_db = $this->load->database('sales', true);
 		$application = $this->db->select('*,l.name as applicant_name,c.id as co_id')->from('application a')
 						->join('learner l','a.learner_id = l.learner_id','left')
 						->join('company c','a.company_id = c.company_id','left')
