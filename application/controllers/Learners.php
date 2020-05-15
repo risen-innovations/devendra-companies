@@ -46,6 +46,37 @@ class Learners extends CI_Controller
 		echo json_encode(array( "status" => false, "message" => 'No learners found'));exit;
     }
 
+    public function searchLearner(){
+        $validToken = $this->validToken();
+        $data = file_get_contents('php://input');
+        $keyword = json_decode($data,true);
+        
+        $learners = $this->db->select('*, c.country_name as nationality')
+                    ->from('learner l')
+                    ->join('countries c','l.nationality = c.id','left')
+                    ->where('l.nric', $keyword['keyword'])
+                    ->or_where('l.work_permit', $keyword['keyword'])
+                    ->or_like('l.name', $keyword['keyword'])
+                    ->get();
+                    
+        $data = array();
+        if($learners->num_rows() > 0){
+            foreach($learners->result() as $row){
+                $maskedNric = $this->mask($row->nric);
+                $row->nric = $maskedNric;
+                $maskedWP = $this->mask($row->work_permit);
+                $row->work_permit = $maskedWP;
+                $data[] = $row;
+            }
+            $data = $learners->result();
+            http_response_code('200');
+            echo json_encode(array( "status" => true, "message" => 'Learner Found',"data" =>$data));exit;
+        }
+
+        http_response_code('200');
+        echo json_encode(array( "status" => true, "message" => 'No Learners found for that Keyword', "data" =>$data));exit;
+    }
+
     public function getLearner(){
         $validToken = $this->validToken();
         $data = file_get_contents('php://input');

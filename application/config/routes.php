@@ -83,4 +83,5 @@ $route['learners/get-learners'] = 'learners/getLearners';
 $route['learners/get-learner'] = 'learners/getLearner';
 $route['learners/get-learner-doc'] = 'learners/getLearnerDoc';
 $route['learners/update-learner'] = 'learners/updateLearner';
+$route['learners/search-learner'] = 'learners/searchLearner';
 $route['company/get-company-learners'] = 'company/getCompanyLearners';

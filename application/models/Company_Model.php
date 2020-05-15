@@ -319,6 +319,14 @@ class Company_model extends CI_Model
 						->get()->row();
 		$course_name = $courses_db->select('course_name')->from('courses')
 						->where('id',$application->course_id)->get()->row();
+		if(isset($application->quotation_id) && !is_null($application->quotation_id)){
+			$quotation_id = $sales_db->select('id')->from('quotations')
+							->where('quotation_id',$application->quotation_id)->get()->row();
+		}
+		$application->q_id = null;
+		if(isset($quotation_id)){
+			$application->q_id = $quotation_id->id;
+		}
 		$application->course_name = $course_name->course_name;
 		http_response_code('200');
 		echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$application));exit;

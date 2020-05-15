@@ -114,9 +114,17 @@ class Company extends CI_Controller
 		$learners = $this->db->select('*')->from('learner')
 					->where('company', $company['company_id'])
 					->get();
+		$data = array();
 		if($learners->num_rows() > 0){
+			foreach($learners->result() as $row){
+                $maskedNric = $this->mask($row->nric);
+                $row->nric = $maskedNric;
+                $maskedWP = $this->mask($row->work_permit);
+                $row->work_permit = $maskedWP;
+                $data[] = $row;
+            }
 			http_response_code('200');
-			echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$learners->result()));exit;
+			echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$data));exit;
 		}else{
 			http_response_code('200');
 			echo json_encode(array( "status"=> false, "message" => "No Learners Found"));exit;
@@ -199,6 +207,13 @@ class Company extends CI_Controller
 		if(is_null($companyData)){
 			$this->show_400();
 		}
+		$exists = $this->db->select('uen')->from('company')
+					->where('uen', '201111111K')
+					->get();
+		if($exists->num_rows() > 0){
+			http_response_code('200');
+			echo json_encode(array('status' => false, 'message' => 'UEN already exists'));exit;
+		}
 		$companyData['company_id'] = hash('sha256',$companyData['uen']);
 		//$companyData['sales_person'] = implode(",",$companyData['sales_person']);
 		$this->db->insert('company',$companyData);
@@ -214,7 +229,8 @@ class Company extends CI_Controller
 			$data =  $this->db->select('*')->get_where('company',array('id'=>$insert_id))->row();
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
 		}else{
-			$this->show_error_500();
+			http_response_code('200');
+			echo json_encode(array('status' => false, 'message' => 'Failed to create new company. Please contact system admin.'));
 		}
 	}
 
@@ -571,7 +587,14 @@ class Company extends CI_Controller
 		$res = $this->company_model->paymentTerms();
 	}
 
-
+	private function mask($string){
+        $strMaskLen = strlen($string) - 4;
+        $strMask = "";
+        for($i = 0; $i < $strMaskLen; $i++){
+            $strMask .= "X";
+        }
+        return $strMask.substr($string, $strMaskLen, 4);
+    }
 
 	private function checkNRCPP($data){
 		$data = $this->db->select('*')->get_where('learner',array('nric'=>$data))->row();
