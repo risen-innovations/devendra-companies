@@ -241,7 +241,9 @@ class Company extends CI_Controller
 		if(is_null($body)){
 			$this->show_400();
 		}
+		//update company table
 		$this->db->where('company_id', $body['company_id'])->update('company', $body);
+		//get sales_assigned_log table records
 		$test = [];
 		$original = [];
 		$all_co_salespersons = $this->db->select('salesperson_id')->from('sales_assigned_log')
@@ -254,16 +256,15 @@ class Company extends CI_Controller
 			$exists = $this->db->select('salesperson_id')->from('sales_assigned_log')
 			->where('salesperson_id', $sp)
 			->where('company_id', $body['company_id'])
-			->get()->num_rows();
-			if($exists <= 0){
+			->get();
+			if($exists->num_rows() <= 0){
 				$this->db->insert('sales_assigned_log',array('salesperson_id'=>$sp,'company_id'=>$body['company_id']));
 			}
-			if(!in_array($sp ,$original)){
+			/*if(!in_array($sp ,$original)){
 				$this->db->where('company_id',$body['company_id']);
 				$this->db->where('salesperson_id',$sp);
 				$this->db->delete('sales_assigned_log');
-			}
-			$test[] = $sp;
+			}*/
 		}
 		http_response_code('200');
 		echo json_encode(array( "status" => true, "message" => 'Success',"data" => $original ));exit;
