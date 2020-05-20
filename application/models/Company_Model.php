@@ -260,12 +260,15 @@ class Company_model extends CI_Model
 		$learner_data['name'] = $applicationData['applicantName'];
 		$learner_data['nric'] = $applicationData['applicantNRIC'];
 		$learner_data['work_permit'] = $applicationData['applicantWorkPermit'];
+		$learner_data['fin'] = $applicationData['applicantFIN'];
 		$learner_data['nationality'] = $applicationData['nationality'];
 		$learner_data['dob'] = $applicationData['dob'];
 		//$learner_data['age'] = $applicationData['age'];
 		$learner_data['sex'] = $applicationData['sex'];
 		$learner_data['contact_no'] = $applicationData['applicantHP'];
 		$learner_data['coretrade_expiry'] = $applicationData['ctexp'];
+		$learner_data['coretradeRegNo'] = $applicationData['coretradeRegNo'];
+		$learner_data['ANExpiry'] = $applicationData['ANExpiry'];
 		$learner = $this->db->insert('learner',$learner_data);
 
 		//company if new company name exists
