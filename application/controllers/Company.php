@@ -319,6 +319,43 @@ class Company extends CI_Controller
 		}
 	}
 
+	public function getExpiringCoreTrades(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		if(is_null($data)){
+			http_response_code(400);
+			echo json_encode(array( "status" => false, "message" => 'Bad Request'));exit;
+		}
+		$learner =  json_decode($data,true);
+		$expiring = $this->db->select("a.company_id, c.company_name, a.learner_id
+						, l.name as learner_name, a.course_id, a.datetime_updated")
+						->from("application a")
+						->join("learner l","a.learner_id = l.learner_id","left")
+						->join("company c","c.company_id = a.company_id","left")
+						->where("a.status", 2) //@todo may need to revise this once learners_results are ready
+						->order_by("a.datetime_updated","desc")
+						->get()->result();
+		$exp = array();
+		if(!is_null($expiring)){
+			$courses_db = $this->load->database('course', true);
+			foreach($expiring as $e){
+				$course = $courses_db->select("course_name")->from("courses")
+								->where('id',$e->course_id)->get()->row();
+				$e->course_name = $course->course_name;
+				$date = date_create(date("Y-m-d", strtotime($e->datetime_updated)));
+				$target = date_create(date("Y-m-d", strtotime("-21 months")));
+				$diff = date_diff($date, $target);
+				$diff = $diff->days;
+				if($diff < 588){
+					$exp[] = $e;
+				}
+			}
+			http_response_code('200');
+			echo json_encode(array("status" => true, "message" => "Fetched Records Successfully"
+			, "data"=>$exp));
+		}
+	}
+
 	public function newApplication(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
