@@ -302,6 +302,23 @@ class Company extends CI_Controller
 		}
 	}
 
+	public function latestApplication(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$company = json_decode($data,true);
+		$latest = $this->db->select("datetime_created as date")->from("application")
+					->where("company_id", $company["company_id"])
+					->order_by("datetime_created desc")->limit(1)->get()->row();
+		if(is_null($latest)){
+			http_response_code('200');
+			echo json_encode(array("status" => false, "message" => "No applications found"));exit;
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Latest Application on '.$latest->date
+			, "data" => $latest->date));exit;
+		}
+	}
+
 	public function newApplication(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
@@ -310,7 +327,6 @@ class Company extends CI_Controller
 			http_response_code(400);
 			echo json_encode(array( "status" => false, "message" => 'Bad Request'));exit;
 		}else{
-			$validToken = $this->validToken();
 			$applicationData = json_decode($data,true);
 			$bucket = 'ri-company-service';
 			//$this->setAuditLog($validToken,45);
