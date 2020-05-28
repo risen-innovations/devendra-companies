@@ -208,7 +208,7 @@ class Company extends CI_Controller
 			$this->show_400();
 		}
 		$exists = $this->db->select('uen')->from('company')
-					->where('uen', '201111111K')
+					->where('uen', $companyData['uen'])
 					->get();
 		if($exists->num_rows() > 0){
 			http_response_code('200');
