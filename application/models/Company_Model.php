@@ -294,7 +294,7 @@ class Company_model extends CI_Model
 			$company_id = $co_data['company_id'];
 		}
 		$app_data['application_id'] = md5(date("Y/m/d h:i:s"),false);
-		$app_data['quotation_id'] = $applicationData['quotation'];
+		$app_data['invoice_id'] = $applicationData['quotation'];
 		$app_data['course_id'] = $applicationData['course'];
 		$app_data['learner_id'] = $learner_data['learner_id'];
 		$app_data['company_id'] = $company_id;
@@ -306,6 +306,7 @@ class Company_model extends CI_Model
 			$app_data['status'] = 3;
 		}
 		$app_data['created_by'] = $applicationData['createdBy'];
+		
 		$application = $this->db->insert('application', $app_data);
 		
 		http_response_code('200');

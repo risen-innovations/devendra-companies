@@ -364,6 +364,8 @@ class Company extends CI_Controller
 			http_response_code(400);
 			echo json_encode(array( "status" => false, "message" => 'Bad Request'));exit;
 		}else{
+			//echo json_encode(array( "status" => false, "message" => $data));exit;
+
 			$applicationData = json_decode($data,true);
 			$bucket = 'ri-company-service';
 			//$this->setAuditLog($validToken,45);
