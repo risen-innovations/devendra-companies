@@ -608,6 +608,7 @@ class Company extends CI_Controller
 	}
 
 	public function changeAccountStatus(){
+		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 		$userData = json_decode($data,true);
 		if(is_null($data)){
