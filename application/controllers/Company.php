@@ -622,7 +622,7 @@ class Company extends CI_Controller
 				$newStatus = 1;
 			}
 			$this->db->where("learner_id", $userData["learner_id"]);
-			$update = $this->db->update("learner", array("status", $newStatus));
+			$update = $this->db->update("learner", array("status" => $newStatus));
 			if($update){
 				http_response_code(200);
 				echo json_encode(array( "status" => true
