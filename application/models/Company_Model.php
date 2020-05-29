@@ -316,9 +316,15 @@ class Company_model extends CI_Model
 	public function getApplication($application){
 		$courses_db = $this->load->database('courses', true);
 		$sales_db = $this->load->database('sales', true);
-		$application = $this->db->select('*,l.name as applicant_name,c.id as co_id')->from('application a')
+		$application = $this->db->select('*,l.name as applicant_name,c.id as co_id
+						,a.sponsor_company as sco_id,a.sponsor_company as sco_id
+						,c2.company_name as sponsor_company_name
+						,wpt.name as work_permit_type_name')
+						->from('application a')
 						->join('learner l','a.learner_id = l.learner_id','left')
 						->join('company c','a.company_id = c.company_id','left')
+						->join('company c2','a.sponsor_company = c2.company_id','left')
+						->join('work_permit_type wpt','c.work_permit_type = wpt.id','left')
 						->where('application_id',$application['application_id'])
 						->get()->row();
 		$course_name = $courses_db->select('course_name')->from('courses')
