@@ -607,6 +607,33 @@ class Company extends CI_Controller
 		}
 	}
 
+	public function changeAccountStatus(){
+		$data = file_get_contents('php://input');
+		$userData = json_decode($data,true);
+		if(is_null($data)){
+			http_response_code(400);
+			echo json_encode(array( "status" => false, "message" => 'Bad Request'));exit;
+		}else{
+			$status = $this->db->select("status, name")->from("learner")
+						->where("learner_id", $userData["learner_id"])
+						->get()->row();
+			$newStatus = 0;
+			if($status->status == 0){
+				$newStatus = 1;
+			}
+			$this->db->where("learner_id", $userData["learner_id"]);
+			$update = $this->db->update("learner", array("status", $newStatus));
+			if($update){
+				http_response_code(200);
+				echo json_encode(array( "status" => true
+				, "message" => "Updated ".$status->name."'s Status Successfully"));exit;
+			}else{
+				http_response_code(500);
+				echo json_encode(array( "status" => false, "message" => 'Failed to update'));exit;
+			}
+		}
+	}
+
 	public function deactivateLearner(){
 		$data = file_get_contents('php://input');
 		$userData = json_decode($data,true);
