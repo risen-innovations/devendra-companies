@@ -36,6 +36,16 @@ class Learners extends CI_Controller
                 $row->nric = $maskedNric;
                 $maskedWP = $this->mask($row->work_permit);
                 $row->work_permit = $maskedWP;
+				if($row->sex == 0){
+					$row->sex = "F";
+				}else{
+					$row->sex = "M";
+				}
+				if($row->status == 0){
+					$row->status = "Inactive";
+				}else{
+					$row->status = "Active";
+				}
                 $data[] = $row;
             }
             $data = $learners->result();
