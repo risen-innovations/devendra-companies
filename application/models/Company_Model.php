@@ -318,13 +318,11 @@ class Company_model extends CI_Model
 		$sales_db = $this->load->database('sales', true);
 		$application = $this->db->select('*,l.name as applicant_name,c.id as co_id
 						,a.sponsor_company as sco_id,a.sponsor_company as sco_id
-						,c2.company_name as sponsor_company_name
 						,wpt.name as work_permit_type_name')
 						->from('application a')
 						->join('learner l','a.learner_id = l.learner_id','left')
 						->join('company c','a.company_id = c.company_id','left')
-						->join('company c2','a.sponsor_company = c2.company_id','left')
-						->join('work_permit_type wpt','c.work_permit_type = wpt.id','left')
+						->join('work_permit_types wpt','l.work_permit_type = wpt.id','left')
 						->where('application_id',$application['application_id'])
 						->get()->row();
 		$course_name = $courses_db->select('course_name')->from('courses')
@@ -336,6 +334,13 @@ class Company_model extends CI_Model
 		$application->q_id = null;
 		if(isset($quotation_id)){
 			$application->q_id = $quotation_id->id;
+		}
+		$application->sponsor_company_name = "";
+		if($application->sponsor_company != ""){
+			$sponsor_company_name = $this->db->select("company_name")->from("company")
+													->where("company_id", $application->sponsor_company)
+													->get()->row();
+			$application->sponsor_company_name = $sponsor_company_name->company_name;
 		}
 		$application->course_name = $course_name->course_name;
 		http_response_code('200');
