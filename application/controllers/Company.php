@@ -297,7 +297,7 @@ class Company extends CI_Controller
 				echo json_encode(array( "status" => true, "message" => "Success"));exit;
 			}else{
 				http_response_code(200);
-				echo json_encode(array( "status" => true, "message" => "UEN not found"));exit;
+				echo json_encode(array( "status" => false, "message" => "UEN not found"));exit;
 			}
 		}
 	}
