@@ -147,6 +147,7 @@ class Company_model extends CI_Model
 				->from('application a')
 				->join('company cy','a.company_id = cy.company_id','left')
 				->join('application_status as','a.status = as.application_status_id','left')
+				->join('learner l','a.learner_id = l.learner_id', 'left')
 				->order_by('a.datetime_created','desc')
 				->get();
 		$applications = array();
