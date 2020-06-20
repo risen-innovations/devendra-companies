@@ -145,13 +145,11 @@ class Company_model extends CI_Model
 		$res = $this->db->select('*, a.id as id, a.company_id as company_id
 				,a.datetime_created as datetime_created')
 				->from('application a')
-				->join('company cy','a.company_id = cy.company_id','left')
 				->join('application_status as','a.status = as.application_status_id','left')
 				->join('learner l','a.learner_id = l.learner_id', 'left')
 				->order_by('a.datetime_created','desc')
 				->get();
 		$applications = array();
-
 		if($res->num_rows() > 0){
 			foreach($res->result() as $row){
 				$newDate = $row->datetime_created;
@@ -160,6 +158,11 @@ class Company_model extends CI_Model
 				$time = $newDate->format('H:i');
 				$row->date = $date;
 				$row->time = $time.' HR';
+
+				$company_name = $this->db->select('company_name')->from('company')
+								->where('company_id', $row->company_id)
+								->get()->row();
+				$row->company_name = $company_name->company_name;
 
 				$course = $courses_db->select('*')->from('courses c')
 						->join('trade_type tt','c.trade_type = tt.id','left')
