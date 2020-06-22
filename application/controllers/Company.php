@@ -107,6 +107,18 @@ class Company extends CI_Controller
 		}
 	}
 
+	private function getSelectedLearners($iid){
+		$sales_db = $this->load->database("sales", TRUE);
+		$existing = $sales_db->select("learner_id")->from("invoice_items_learners")
+					->where("invoice_items_id", $iid)
+					->get()->result();
+		$selected = array();
+		foreach($existing as $e){
+			$selected[] = $e->learner_id;
+		}
+		return $selected;
+	}
+
 	public function getCompanyLearners(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
@@ -126,12 +138,18 @@ class Company extends CI_Controller
 			foreach($courses as $course){
 				$registeredLearners[] = $course->learner_id;
 			}
+			//get selected learners
+			$selected = $this->getSelectedLearners($company['invoice_items_id']);
 			foreach($learners->result() as $row){
 				if(in_array($row->learner_id, $registeredLearners)){
 					$maskedNric = $this->mask($row->nric);
 					$row->nric = $maskedNric;
 					$maskedWP = $this->mask($row->work_permit);
 					$row->work_permit = $maskedWP;
+					$row->selected = FALSE;
+					if(in_array($row->learner_id, $selected)){
+						$row->selected = TRUE;
+					}
 					$data[] = $row;
 				}
 			}
