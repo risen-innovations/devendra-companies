@@ -259,6 +259,7 @@ class Company_model extends CI_Model
 
 	public function newApplication($applicationData)
 	{
+		$UENHash = hash('sha256',$applicationData['uen']);
 		//learner
 		$learner_data['learner_id'] = hash('sha256',$applicationData['applicantNRIC']);
 		$learner_data['name'] = $applicationData['applicantName'];
@@ -273,11 +274,12 @@ class Company_model extends CI_Model
 		$learner_data['coretrade_expiry'] = $applicationData['ctexp'];
 		$learner_data['coretradeRegNo'] = $applicationData['coretradeRegNo'];
 		$learner_data['ANExpiry'] = $applicationData['ANExpiry'];
+		$learner_data['company'] = $UENHash;
 		$learner = $this->db->insert('learner',$learner_data);
 
 		//company if new company name exists
 		if(isset($applicationData['newCompanyName'])){
-			$co_data['company_id'] = hash('sha256',$applicationData['uen']);
+			$co_data['company_id'] = $UENHash;
 			$co_data['company_name'] = $applicationData['newCompanyName'];
 			$co_data['uen'] = $applicationData['uen'];
 			$co_data['contact_person'] = $applicationData['contactPerson'];

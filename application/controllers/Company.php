@@ -116,17 +116,34 @@ class Company extends CI_Controller
 					->get();
 		$data = array();
 		if($learners->num_rows() > 0){
+			//filter learners to application
+			$courses = $this->db->select("learner_id")->from("application")
+						->where('invoice_id', $company['invoice_id'])
+						->where('company_id', $company['company_id'])
+						->where('course_id', $company['course_id'])
+						->get()->result();
+			$registeredLearners = array();
+			foreach($courses as $course){
+				$registeredLearners[] = $course->learner_id;
+			}
 			foreach($learners->result() as $row){
-                $maskedNric = $this->mask($row->nric);
-                $row->nric = $maskedNric;
-                $maskedWP = $this->mask($row->work_permit);
-                $row->work_permit = $maskedWP;
-                $data[] = $row;
-            }
-			http_response_code('200');
-			echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$data));exit;
+				if(in_array($row->learner_id, $registeredLearners)){
+					$maskedNric = $this->mask($row->nric);
+					$row->nric = $maskedNric;
+					$maskedWP = $this->mask($row->work_permit);
+					$row->work_permit = $maskedWP;
+					$data[] = $row;
+				}
+			}
+			if(!empty($data)){
+				http_response_code('200');
+				echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$data));exit;
+			}else{
+				http_response_code('204');
+				echo json_encode(array( "status"=> false, "message" => "No Registered Learners Found For This Course"));exit;
+			}
 		}else{
-			http_response_code('200');
+			http_response_code('204');
 			echo json_encode(array( "status"=> false, "message" => "No Learners Found"));exit;
 		}
 	}
