@@ -166,10 +166,12 @@ class Company_model extends CI_Model
 
 				$course = $courses_db->select('*')->from('courses c')
 						->join('trade_type tt','c.trade_type = tt.id','left')
+						->join('trade_level tl','c.trade_level = tl.id','left')
 						->where('c.id',$row->course_id)
 						->get()->row();
 				$row->course_name = $course->course_name;
 				$row->trade_type_name = $course->trade_type_name;
+				$row->trade_level_name = $course->trade_level_name;
 
 				$personnel = $account_db->select('*')->from('accounts a')
 						->where('a.user_id',$row->created_by)
