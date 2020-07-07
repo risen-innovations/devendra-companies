@@ -407,7 +407,7 @@ class Company extends CI_Controller
 			$nricCopy = $applicationData['nricCopy'];
 			$cet = $applicationData['cet'];
 			$receipt = $applicationData['fullPayment'];
-			if($nricCopy){
+			if($nricCopy != ""){
 				$data = $nricCopy;
 				list($type, $data) = explode(';', $data);
 				list(, $data)      = explode(',', $data);
@@ -422,7 +422,7 @@ class Company extends CI_Controller
 				$applicationDoc['application_doc_id'] = hash('sha256',$imageName);
 				$this->db->insert('application_doc',$applicationDoc);
 			}
-			if($cet){
+			if($cet != ""){
 				$data = $cet;
 				list($type, $data) = explode(';', $data);
 				list(, $data)      = explode(',', $data);
@@ -437,7 +437,7 @@ class Company extends CI_Controller
 				$applicationDoc['application_doc_id'] = hash('sha256',$imageName);
 				$this->db->insert('application_doc',$applicationDoc);
 			}
-			if($receipt){
+			if($receipt != ""){
 				$data = $cet;
 				list($type, $data) = explode(';', $data);
 				list(, $data)      = explode(',', $data);
@@ -456,6 +456,77 @@ class Company extends CI_Controller
 			if($create){
 				http_response_code('200');
 				echo json_encode(array( "status" => true, "message" => "Success"));exit;
+			}
+		}
+	}
+
+	public function updateApplication(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+
+		if(is_null($data)){
+			http_response_code(400);
+			echo json_encode(array( "status" => false, "message" => 'Bad Request'));exit;
+		}else{
+			//echo json_encode(array( "status" => false, "message" => $data));exit;
+
+			$applicationData = json_decode($data,true);
+			$bucket = 'ri-company-service';
+			//$this->setAuditLog($validToken,45);
+			$nricCopy = $applicationData['nricCopy'];
+			$cet = $applicationData['cet'];
+			$receipt = $applicationData['fullPayment'];
+			if($nricCopy != ""){
+				$data = $nricCopy;
+				list($type, $data) = explode(';', $data);
+				list(, $data)      = explode(',', $data);
+				$data = base64_decode($data);
+				$randomId = uniqid();
+				$imageName = $randomId.'.jpg';
+				$_FILES['image']['name'] = 'learners/nric/'.$imageName;
+				$_FILES['image']['tmp_name'] = $data;
+				$this->AWSS3->uploadS3($_FILES, $bucket);
+				$applicationDoc['filepath'] = 'learners/nric/'.$imageName;
+				$applicationDoc['application_doc_type'] = 1;
+				$applicationDoc['application_doc_id'] = hash('sha256',$imageName);
+				$this->db->insert('application_doc',$applicationDoc);
+			}
+			if($cet != ""){
+				$data = $cet;
+				list($type, $data) = explode(';', $data);
+				list(, $data)      = explode(',', $data);
+				$data = base64_decode($data);
+				$randomId = uniqid();
+				$imageName = $randomId.'.jpg';
+				$_FILES['image']['name'] = 'learners/cet/'.$imageName;
+				$_FILES['image']['tmp_name'] = $data;
+				$this->AWSS3->uploadS3($_FILES, $bucket);
+				$applicationDoc['filepath'] = 'learners/cet/'.$imageName;
+				$applicationDoc['application_doc_type'] = 2;
+				$applicationDoc['application_doc_id'] = hash('sha256',$imageName);
+				$this->db->insert('application_doc',$applicationDoc);
+			}
+			if($receipt != "0" && $receipt != ""){
+				$data = $cet;
+				list($type, $data) = explode(';', $data);
+				list(, $data)      = explode(',', $data);
+				$data = base64_decode($data);
+				$randomId = uniqid();
+				$imageName = $randomId.'.jpg';
+				$_FILES['image']['name'] = 'learners/receipt/'.$imageName;
+				$_FILES['image']['tmp_name'] = $data;
+				$this->AWSS3->uploadS3($_FILES, $bucket);
+				$applicationDoc['filepath'] = 'learners/receipt/'.$imageName;
+				$applicationDoc['application_doc_type'] = 2;
+				$applicationDoc['application_doc_id'] = hash('sha256',$imageName);
+				$this->db->insert('application_doc',$applicationDoc);
+			}
+			$create = $this->company_model->updateApplication($applicationData);
+			if($create){
+				http_response_code('200');
+				echo json_encode(array( "status" => true, "message" => "Success"));exit;
+			}else{
+				$this->show_error_500();
 			}
 		}
 	}

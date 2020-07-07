@@ -56,6 +56,7 @@ $route['migrate'] = 'migrate';
 $route['company/check-uen'] = 'company/checkUEN';
 $route['company/company-lists'] = 'company/companyList';
 $route['company/new-application'] = 'company/newApplication';
+$route['company/update-application'] = 'company/updateApplication';
 $route['company/get-application'] = 'company/getApplication';
 $route['company/get-categories'] = 'company/getCategories';
 $route['company/get-companies'] = 'company/getCompanies';

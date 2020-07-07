@@ -277,7 +277,12 @@ class Company_model extends CI_Model
 		$learner_data['coretradeRegNo'] = $applicationData['coretradeRegNo'];
 		$learner_data['ANExpiry'] = $applicationData['ANExpiry'];
 		$learner_data['company'] = $UENHash;
-		$learner = $this->db->insert('learner',$learner_data);
+		$learnerExists = $this->db->select("learner_id")->from("learner")
+			->where("learner_id", $learner_data['learner_id'])
+			->get()->num_rows();
+		if($learnerExists == 0){
+			$learner = $this->db->insert('learner',$learner_data);
+		}
 
 		//company if new company name exists
 		if(isset($applicationData['newCompanyName'])){
@@ -291,7 +296,12 @@ class Company_model extends CI_Model
 			$co_data['postal_code'] = $applicationData['postal'];
 			$co_data['street'] = $applicationData['street'];
 			$co_data['unit'] = $applicationData['unit'];
-			$company = $this->db->insert('company', $co_data);
+			$coExists = $this->db->select("company_id")->from("company")
+						->where("company_id", $UENHash)
+						->get()->num_rows();
+			if($coExists == 0){
+				$company = $this->db->insert('company', $co_data);
+			}
 		}
 
 		//application table
@@ -306,16 +316,71 @@ class Company_model extends CI_Model
 		$app_data['course_id'] = $applicationData['course'];
 		$app_data['learner_id'] = $learner_data['learner_id'];
 		$app_data['company_id'] = $company_id;
-		$app_data['photocopy_id'] =  hash('sha256',$applicationData['nricCopy']);
-		$app_data['cet_acknowledgement'] = hash('sha256',$applicationData['cet']);
-		$app_data['receipt'] = hash('sha256',$applicationData['fullPayment']);
+		if($applicationData['nricCopy'] != ""){
+			$app_data['photocopy_id'] =  hash('sha256',$applicationData['nricCopy']);
+		}
+		if($applicationData['cet'] != ""){
+			$app_data['cet_acknowledgement'] = hash('sha256',$applicationData['cet']);
+		}
+		if($applicationData['fullPayment'] != ""){
+			$app_data['receipt'] = hash('sha256',$applicationData['fullPayment']);
+		}
 		$app_data['full_payment'] = $applicationData["fullPaymentChecked"];
 		if($app_data['full_payment'] == true){
 			$app_data['status'] = 3;
 		}
 		$app_data['created_by'] = $applicationData['createdBy'];
-		
+		if(isset($applicationData['sponsorCompany'])){
+			$app_data['sponsor_company'] = $applicationData['sponsorCompany'];
+		}
 		$application = $this->db->insert('application', $app_data);
+		
+		http_response_code('200');
+		echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$application));exit;
+	}
+
+	public function updateApplication($applicationData)
+	{
+		$applicationID = $applicationData['application_id'];
+		unset($applicationData['application_id']);
+		$application = $this->db->select("*")->from("application")
+						->where("application_id", $applicationID)
+						->get()->row();
+		//learner
+		$learner_data['learner_id'] = hash('sha256',$applicationData['applicantNRIC']);
+		$learner_data['name'] = $applicationData['applicantName'];
+		$learner_data['nric'] = $applicationData['applicantNRIC'];
+		$learner_data['work_permit'] = $applicationData['applicantWorkPermit'];
+		$learner_data['fin'] = $applicationData['applicantFIN'];
+		$learner_data['nationality'] = $applicationData['nationality'];
+		$learner_data['dob'] = $applicationData['dob'];
+		$learner_data['sex'] = $applicationData['sex'];
+		$learner_data['contact_no'] = $applicationData['applicantHP'];
+		$learner_data['coretrade_expiry'] = $applicationData['ctexp'];
+		$learner_data['coretradeRegNo'] = $applicationData['coretradeRegNo'];
+		$learner_data['ANExpiry'] = $applicationData['ANExpiry'];
+		$this->db->where("learner_id", $application->learner_id);
+		$update = $this->db->update('learner',$learner_data);
+		//application table
+		$app_data['learner_id'] = $learner_data['learner_id'];
+		if($applicationData['nricCopy'] != ""){
+			$app_data['photocopy_id'] =  hash('sha256',$applicationData['nricCopy']);
+		}
+		if($applicationData['cet'] != ""){
+			$app_data['cet_acknowledgement'] = hash('sha256',$applicationData['cet']);
+		}
+		if($applicationData['fullPayment'] != ""){
+			$app_data['receipt'] = hash('sha256',$applicationData['fullPayment']);
+		}
+		$app_data['full_payment'] = $applicationData["fullPaymentChecked"];
+		if($app_data['full_payment'] == true){
+			$app_data['status'] = 3;
+		}
+		if(isset($applicationData['sponsorCompany'])){
+			$app_data['sponsor_company'] = $applicationData['sponsorCompany'];
+		}
+		$this->db->where('application_id', $applicationID);
+		$application = $this->db->update('application', $app_data);
 		
 		http_response_code('200');
 		echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$application));exit;
