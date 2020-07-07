@@ -278,7 +278,7 @@ class Company_model extends CI_Model
 		$learner_data['ANExpiry'] = $applicationData['ANExpiry'];
 		$learner_data['company'] = $UENHash;
 		$learnerExists = $this->db->select("learner_id")->from("learner")
-			->where("learner_id", $learner_data['learner_id'])
+			->where("nric", $applicationData['applicantNRIC'])
 			->get()->num_rows();
 		if($learnerExists <= 0){
 			$learner = $this->db->insert('learner',$learner_data);
@@ -297,7 +297,7 @@ class Company_model extends CI_Model
 			$co_data['street'] = $applicationData['street'];
 			$co_data['unit'] = $applicationData['unit'];
 			$coExists = $this->db->select("company_id")->from("company")
-						->where("company_id", $UENHash)
+						->where("uen", $applicationData['uen'])
 						->get()->num_rows();
 			if($coExists <= 0){
 				$company = $this->db->insert('company', $co_data);
@@ -305,17 +305,11 @@ class Company_model extends CI_Model
 		}
 
 		//application table
-		if(isset($applicationData['company'])){
-			$company_id = $applicationData['company'];
-		}
-		if(isset($co_data['company_id'])){
-			$company_id = $co_data['company_id'];
-		}
 		$app_data['application_id'] = md5(date("Y/m/d h:i:s"),false);
 		$app_data['invoice_id'] = $applicationData['quotation'];
 		$app_data['course_id'] = $applicationData['course'];
 		$app_data['learner_id'] = $learner_data['learner_id'];
-		$app_data['company_id'] = $company_id;
+		$app_data['company_id'] = $UENHash;
 		if($applicationData['nricCopy'] != ""){
 			$app_data['photocopy_id'] =  hash('sha256',$applicationData['nricCopy']);
 		}
