@@ -590,15 +590,20 @@ class Company extends CI_Controller
 			$applicationDoc['application_doc_id'] = hash('sha256',$imageName);
 			$this->db->insert('application_doc',$applicationDoc);
 		}
-		$this->db->insert('learner',$learnerData);
-		$insert_id =  $this->db->insert_id();
-		if($insert_id){
-			$this->setAuditLog($validToken,17);
-			http_response_code('200');
-			$data =  $this->db->select('*')->get_where('learner',array('id'=>$insert_id))->row();
-			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
-		}else{
-			$this->show_error_500();
+		$learnerExists = $this->db->select('learner_id')->from('learner')
+						->where('learner_id', $learnerData['learner_id'])
+						->get()->num_rows();
+		if($learnerExists > 0){
+			$this->db->insert('learner',$learnerData);
+			$insert_id =  $this->db->insert_id();
+			if($insert_id){
+				$this->setAuditLog($validToken,17);
+				http_response_code('200');
+				$data =  $this->db->select('*')->get_where('learner',array('id'=>$insert_id))->row();
+				echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
+			}else{
+				$this->show_error_500();
+			}
 		}
 	}
 
