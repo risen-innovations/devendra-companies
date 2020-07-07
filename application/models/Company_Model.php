@@ -280,7 +280,7 @@ class Company_model extends CI_Model
 		$learnerExists = $this->db->select("learner_id")->from("learner")
 			->where("learner_id", $learner_data['learner_id'])
 			->get()->num_rows();
-		if($learnerExists == 0){
+		if($learnerExists <= 0){
 			$learner = $this->db->insert('learner',$learner_data);
 		}
 
@@ -299,7 +299,7 @@ class Company_model extends CI_Model
 			$coExists = $this->db->select("company_id")->from("company")
 						->where("company_id", $UENHash)
 						->get()->num_rows();
-			if($coExists == 0){
+			if($coExists <= 0){
 				$company = $this->db->insert('company', $co_data);
 			}
 		}
