@@ -89,3 +89,4 @@ $route['company/get-company-learners'] = 'company/getCompanyLearners';
 $route['company/latest-application'] = 'company/latestApplication';
 $route['company/get-expiring-core-trades'] = 'company/getExpiringCoreTrades';
 $route['company/change-account-status'] = 'company/changeAccountStatus';
+$route['company/get-unpaid-invoice'] = 'company/getUnpaidInvoice';

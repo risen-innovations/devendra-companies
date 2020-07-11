@@ -777,6 +777,53 @@ class Company extends CI_Controller
 		$res = $this->company_model->paymentTerms();
 	}
 
+	public function getUnpaidInvoice(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$companyData = json_decode($data,true);
+		$companyID = $companyData['company_id'];
+		$sales_db = $this->load->database('sales', true);
+		$course_db = $this->load->database('courses', true);
+		$unpaid = $sales_db->select('*')->from('invoices i')
+					->where('i.status !=',1)
+					->where('i.company_id', $companyID)
+					->get()->result();
+		$invoice_items = [];
+		$invoice_discount_items = [];
+		$total_fees = 0;
+		$total_discount = 0;
+		$grand_total = 0;
+		if(!empty($unpaid)){
+			foreach($unpaid as $u){
+				$invoice_id = $u->invoice_id;
+				$invoice_items[$invoice_id] = $sales_db->select('*')->from('invoice_items ii')
+												->where('ii.invoice_id', $invoice_id)
+												->get()->result();
+				foreach($invoice_items[$invoice_id] as $ii){
+					$fees = $course_db->select("sum(training_fees + test_fees) as total_fees")
+							->from('courses')->where('id', $ii->course_id)
+							->get()->row();
+					$ii->fees = $fees->total_fees;
+					$total_fees += $fees->total_fees;
+				}
+				$invoice_discount_items[$invoice_id] = $sales_db->select('*')->from('invoice_discount_items')
+														->where('invoice_id', $invoice_id)
+														->get()->result();
+				foreach($invoice_discount_items[$invoice_id] as $idi){
+					$total_discount += $idi->discount_amount;
+				}
+				$u->invoice_items = $invoice_items;
+				$u->invoice_discount_items = $invoice_discount_items;
+			}
+			$grand_total = $total_fees - $total_discount;
+			array_push($unpaid, array('grand_total' => $grand_total));
+			http_response_code("200");
+			echo json_encode(array("status" => true, "message" => "Unpaid Invoices Found", "data" => $unpaid));
+		}else{
+			http_response_code("204");
+		}
+	}
+
 	private function mask($string){
         $strMaskLen = strlen($string) - 4;
         $strMask = "";
