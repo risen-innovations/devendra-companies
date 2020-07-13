@@ -372,7 +372,7 @@ class Company extends CI_Controller
 						->get()->result();
 		$exp = array();
 		if(!is_null($expiring)){
-			$courses_db = $this->load->database('course', true);
+			$courses_db = $this->load->database('courses', true);
 			foreach($expiring as $e){
 				$course = $courses_db->select("course_name")->from("courses")
 								->where('id',$e->course_id)->get()->row();
@@ -777,7 +777,7 @@ class Company extends CI_Controller
 		$res = $this->company_model->paymentTerms();
 	}
 
-	public function getUnpaidInvoice(){
+	public function getUnpaidInvoices(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 		$companyData = json_decode($data,true);
@@ -812,8 +812,8 @@ class Company extends CI_Controller
 				foreach($invoice_discount_items[$invoice_id] as $idi){
 					$total_discount += $idi->discount_amount;
 				}
-				$u->invoice_items = $invoice_items;
-				$u->invoice_discount_items = $invoice_discount_items;
+				$u->invoice_items = $invoice_items[$invoice_id];
+				$u->invoice_discount_items = $invoice_discount_items[$invoice_id];
 			}
 			$grand_total = $total_fees - $total_discount;
 			array_push($unpaid, array('grand_total' => $grand_total));
