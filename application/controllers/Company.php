@@ -777,6 +777,65 @@ class Company extends CI_Controller
 		$res = $this->company_model->paymentTerms();
 	}
 
+	public function companiesReceivables(){
+		$validToken = $this->validToken();
+		$sales_db = $this->load->database('sales', true);
+		$course_db = $this->load->database('courses', true);
+		$companies = $this->db->select('company_id, company_name, uen
+						, street, unit, postal_code')
+						->from('company')->get()->result();
+		$coUnpaid = array();
+		$unpaid = array();
+		$discount = array();
+		foreach($companies as $co){
+			$sql = $sales_db->select('*')->from('invoices i')
+					->where('i.status !=',1)
+					->where('company_id', $co->company_id)
+					->get()->result();
+			$res = array();
+			if(!empty($sql)){
+				$total_price = 0;
+				foreach($sql as $invoice){
+					$unpaid[$invoice->invoice_id] = 0;
+					$discount[$invoice->invoice_id] = 0;
+					$items = $sales_db->select("course_id, quantity")->from("invoice_items")
+								->where("invoice_id", $invoice->invoice_id)
+								->get()->result();
+					$invoice_discounts = $sales_db->select("discount_amount")->from("invoice_discount_items")
+										->where("invoice_id", $invoice->invoice_id)
+										->get()->result();
+					foreach($invoice_discounts as $invoice_discount){
+						$discount[$invoice->invoice_id] += $invoice_discount->discount_amount;
+					}
+					if(!empty($items)){
+						foreach($items as $item){
+							$item_price = $course_db->select("sum(training_fees + test_fees) as total_fees")
+							->from("courses")->where("id", $item->course_id)
+							->get()->row();
+							$price = $item->quantity * $item_price->total_fees;
+							$unpaid[$invoice->invoice_id] += $price;
+						}
+					}
+					$invoice->unpaid = round(($unpaid[$invoice->invoice_id] - $discount[$invoice->invoice_id]) * 1.07, 2);
+					$total_price += $invoice->unpaid;
+				}
+				$res['company_name'] = $co->company_name;
+				$res['company_id'] = $co->company_id;
+				$res['uen'] = $co->uen;
+				$res['address'] = $co->street.' '.$co->unit.' Singapore '.$co->postal_code;
+				$res['receivables'] = round($total_price, 2);
+				array_push($coUnpaid, $res);
+			}
+		}
+		if(!is_null($coUnpaid)){
+			http_response_code("200");
+			echo json_encode(array("status" => true, "message" => "Companies with Pending Payment Found",
+									"data" => $coUnpaid));
+		}else{
+			http_response_code("204");
+		}
+	}
+
 	public function getUnpaidInvoices(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
@@ -818,9 +877,9 @@ class Company extends CI_Controller
 			$grand_total = $total_fees - $total_discount;
 			array_push($unpaid, array('grand_total' => $grand_total));
 			http_response_code("200");
-			echo json_encode(array("status" => true, "message" => "Unpaid Invoices Found", "data" => $unpaid));
+			echo json_encode(array("status" => true, "message" => "Unpaid Invoices Found", "data" => $unpaid));exit;
 		}else{
-			http_response_code("204");
+			http_response_code("204");exit;
 		}
 	}
 
