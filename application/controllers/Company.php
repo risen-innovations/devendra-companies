@@ -91,6 +91,27 @@ class Company extends CI_Controller
 		}
 	}
 
+	public function getCompaniesByRole(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$search = json_decode($data,true);
+		$sql = $this->db->select('company_id, company_name, sales_person')->from('company')
+				->order_by('company_name','asc')->get();
+		$companies = array();
+		foreach($sql->result() as $co){
+			$exists =  strstr($co->sales_person, $search['filter_by_value']);
+			if($exists != ""){
+				$companies[] = $co;
+			}
+		}
+		if(is_null($companies)){
+			http_response_code('204');
+		}else{
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$companies));exit;
+		}
+	}
+
 	public function getCompanies(){
 		$validToken = $this->validToken();
 		$sql = $this->db->select('company_id, company_name')->from('company')
