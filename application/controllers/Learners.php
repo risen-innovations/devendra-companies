@@ -28,7 +28,8 @@ class Learners extends CI_Controller
     public function getLearners(){
         $validToken = $this->validToken();
         $learners = $this->db->select('*, c.country_name as nationality')->from('learner l')
-                    ->join('countries c','l.nationality = c.id','left')->get();
+                    ->join('countries c','l.nationality = c.id','left')
+                    ->where("l.status", 1)->get();
         $data = array();
         if($learners->num_rows() > 0){
             foreach($learners->result() as $row){
