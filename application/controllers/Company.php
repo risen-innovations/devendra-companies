@@ -95,12 +95,20 @@ class Company extends CI_Controller
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 		$search = json_decode($data,true);
+		$accounts_db = $this->load->database('account', true);
+		$role = $accounts_db->select("role")->from("accounts")
+				->where("user_id", $search['filter_by_value'])
+				->get()->row();
 		$sql = $this->db->select('company_id, company_name, sales_person')->from('company')
 				->order_by('company_name','asc')->get();
 		$companies = array();
 		foreach($sql->result() as $co){
-			$exists =  strstr($co->sales_person, $search['filter_by_value']);
-			if($exists != ""){
+			if(!in_array($role->role, array(1, 2, 3, 5, 9, 10))){
+				$exists =  strstr($co->sales_person, $search['filter_by_value']);
+				if($exists != ""){
+					$companies[] = $co;
+				}
+			}else{
 				$companies[] = $co;
 			}
 		}
