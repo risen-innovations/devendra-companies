@@ -94,3 +94,5 @@ $route['company/change-account-status'] = 'company/changeAccountStatus';
 $route['company/get-unpaid-invoices'] = 'company/getUnpaidInvoices';
 $route['company/companies-receivables'] = 'company/companiesReceivables';
 $route['company/companies-receivables-filter'] = 'company/companiesReceivablesFilter';
+$route['company/save-threshold'] = 'company/saveThreshold';
+$route['company/get-threshold'] = 'company/getThreshold';

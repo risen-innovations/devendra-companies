@@ -795,6 +795,7 @@ class Company extends CI_Controller
 	}
 
 	public function deactivateLearnerManager(){
+		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 		$userData = json_decode($data,true);
 		if(is_null($data)){
@@ -813,6 +814,32 @@ class Company extends CI_Controller
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 		$res = $this->company_model->paymentTerms();
+	}
+
+	public function getThreshold(){
+		$validToken = $this->validToken();
+		$threshold = $this->db->select('threshold')->from('threshold')
+					->where('id', 1)->get()->row();
+		if(!is_null($threshold)){
+			http_response_code("200");
+			echo json_encode(array("status" => true, "message" => "Fetched Threshold Successfully", "data" => $threshold->threshold));
+		}else{
+			$this->show_error_500();
+		}
+	}
+
+	public function saveThreshold(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$threshold = json_decode($data, true);
+		$this->db->where('id', 1);
+		$update = $this->db->update('threshold',array('threshold' => $threshold['filter_by_value']));
+		if($update){
+			http_response_code("200");
+			echo json_encode(array("status" => true, "message" => "Updated Threshold Successfully"));
+		}else{
+			$this->show_error_500();
+		}
 	}
 
 	public function companiesReceivables(){
