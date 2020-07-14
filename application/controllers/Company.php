@@ -119,6 +119,24 @@ class Company extends CI_Controller
 		return $selected;
 	}
 
+	public function getLearnersUnderCompany(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$company = json_decode($data,true);
+		$applications = $this->db->select('a.learner_id, l.name, l.nric, l.work_permit, l.fin')
+						->from('application a')
+						->where('a.company_id', $company['company_id'])
+						->join("learner l","a.learner_id = l.learner_id","left")
+						->group_by('l.learner_id')
+						->get()->result();
+		if(!is_null($applications)){
+			http_response_code("200");
+			echo json_encode(array("status" => true, "message" => "Learners Found", "data" => $applications));
+		}else{
+			http_response_code("204");
+		}
+	}
+
 	public function getCompanyLearners(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
@@ -158,7 +176,6 @@ class Company extends CI_Controller
 				echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$data));exit;
 			}else{
 				http_response_code('204');
-				echo json_encode(array( "status"=> false, "message" => "No Registered Learners Found For This Course"));exit;
 			}
 		}else{
 			http_response_code('204');
@@ -790,6 +807,7 @@ class Company extends CI_Controller
 		foreach($companies as $co){
 			$sql = $sales_db->select('*')->from('invoices i')
 					->where('i.status !=',1)
+					->where('i.status !=',2)
 					->where('company_id', $co->company_id)
 					->get()->result();
 			$res = array();
