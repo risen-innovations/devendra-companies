@@ -844,9 +844,76 @@ class Company extends CI_Controller
 		$update = $this->db->update('threshold',array('threshold' => $threshold['filter_by_value']));
 		if($update){
 			http_response_code("200");
-			echo json_encode(array("status" => true, "message" => "Updated Threshold Successfully"));
+			echo json_encode(array("status" => true, "message" => "Updated Threshold Successfully"));exit;
 		}else{
-			$this->show_error_500();
+			$this->show_error_500();exit;
+		}
+	}
+
+	public function checkThreshold(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$company = json_decode($data, true);
+		$companyID = $company['company_id'];
+		$threshold = $this->db->select('threshold')->from('threshold')
+					->where('id', 1)->get()->row();
+		if(!is_null($threshold)){
+			$receivables = $this->companyReceivables($companyID);
+			http_response_code("200");
+			if($receivables > $threshold->threshold){
+				echo json_encode(array("status" => true
+										, "message" => "Exceeded Credit Threshold. Unable to Proceed."));
+			}else{
+				echo json_encode(array("status" => false, "message" => "Not Exceeded"));
+			}
+		}else{
+			$this->show_error_500();exit;
+		}
+	}
+
+	private function companyReceivables($companyID){
+		$sales_db = $this->load->database('sales', true);
+		$course_db = $this->load->database('courses', true);
+		$sql = $sales_db->select('*')->from('invoices i')
+					->where('i.status !=',1)
+					->where('i.status !=',2)
+					->where('company_id', $companyID)
+					->get()->result();
+		$res = array();
+		$coUnpaid = array();
+		$unpaid = array();
+		$discount = array();
+		if(!empty($sql)){
+			$total_price = 0;
+			foreach($sql as $invoice){
+				$unpaid[$invoice->invoice_id] = 0;
+				$discount[$invoice->invoice_id] = 0;
+				$items = $sales_db->select("course_id, quantity")->from("invoice_items")
+							->where("invoice_id", $invoice->invoice_id)
+							->get()->result();
+				$invoice_discounts = $sales_db->select("discount_amount")->from("invoice_discount_items")
+									->where("invoice_id", $invoice->invoice_id)
+									->get()->result();
+				foreach($invoice_discounts as $invoice_discount){
+					$discount[$invoice->invoice_id] += $invoice_discount->discount_amount;
+				}
+				if(!empty($items)){
+					foreach($items as $item){
+						$item_price = $course_db->select("sum(training_fees + test_fees) as total_fees")
+						->from("courses")->where("id", $item->course_id)
+						->get()->row();
+						$price = $item->quantity * $item_price->total_fees;
+						$unpaid[$invoice->invoice_id] += $price;
+					}
+				}
+				$invoice->unpaid = round(($unpaid[$invoice->invoice_id] - $discount[$invoice->invoice_id]) * 1.07, 2);
+				$total_price += $invoice->unpaid;
+			}
+			$res['receivables'] = round($total_price, 2);
+			array_push($coUnpaid, $res);
+			return $res['receivables'];
+		}else{
+			http_response_code("204");exit;
 		}
 	}
 

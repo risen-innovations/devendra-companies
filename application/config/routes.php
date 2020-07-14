@@ -96,3 +96,4 @@ $route['company/companies-receivables'] = 'company/companiesReceivables';
 $route['company/companies-receivables-filter'] = 'company/companiesReceivablesFilter';
 $route['company/save-threshold'] = 'company/saveThreshold';
 $route['company/get-threshold'] = 'company/getThreshold';
+$route['company/check-threshold'] = 'company/checkThreshold';
