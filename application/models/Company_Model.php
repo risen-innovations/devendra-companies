@@ -402,7 +402,7 @@ class Company_model extends CI_Model
 		if(isset($quotation_id)){
 			$application->q_id = $quotation_id->id;
 		}
-		if($application->sponsor_company != 0){
+		if($application->sponsor_company != "0"){
 			$sponsor_company_name = $this->db->select("company_name")->from("company")
 													->where("company_id", $application->sponsor_company)
 													->get()->row();
