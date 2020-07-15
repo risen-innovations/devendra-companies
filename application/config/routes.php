@@ -60,6 +60,7 @@ $route['company/update-application'] = 'company/updateApplication';
 $route['company/get-application'] = 'company/getApplication';
 $route['company/get-categories'] = 'company/getCategories';
 $route['company/get-companies'] = 'company/getCompanies';
+$route['company/get-inactive-companies'] = 'company/getInactiveCompanies';
 $route['company/get-companies-by-role'] = 'company/getCompaniesByRole';
 $route['company/get-courses'] = 'company/getCourses';
 $route['company/get-salespersons'] = 'company/getSalespersons';

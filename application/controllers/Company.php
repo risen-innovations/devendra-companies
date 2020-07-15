@@ -57,6 +57,41 @@ class Company extends CI_Controller
 		$company = $this->company_model->getCompanyListsName($search);
 	}
 
+	public function getInactiveCompanies(){
+		$validToken = $this->validToken();
+		$sales_db = $this->load->database("sales", true);
+		$companies = $this->db->select('id, company_id, company_name, uen')->from('company')
+						->get()->result();
+		$inactiveCompanies = [];
+		$threshold = strtotime("-90 days");
+		foreach($companies as $company){
+			$last_date = $sales_db->select('datetime_created')->from('invoices')
+							->where('company_id', $company->company_id)
+							->order_by('datetime_created', 'desc')
+							->limit(1)
+							->get()->row();
+			if(!is_null($last_date)){
+				if($last_date->datetime_created >= $threshold){
+					$inactiveCompanies[] = array(
+												"company_id" => $company->company_id,
+												"company_name" => $company->company_name,
+												"uen" => $company->uen,
+												"last_date" => $last_date->datetime_created
+											);
+				}
+			}else{
+				$inactiveCompanies[] = array(
+					"company_id" => $company->company_id,
+					"company_name" => $company->company_name,
+					"uen" => $company->uen,
+					"last_date" => null
+				);
+			}
+		}
+		http_response_code("200");
+		echo json_encode(array("status" => true,"message" => "","data" => $inactiveCompanies));exit;
+	}
+
 	public function getCategories(){
 		$validToken = $this->validToken();
 		$courses_db = $this->load->database('courses',TRUE);
