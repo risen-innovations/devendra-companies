@@ -240,6 +240,7 @@ class Company extends CI_Controller
 				echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$data));exit;
 			}else{
 				http_response_code('204');
+				echo json_encode(array( "status"=> false, "message" => "No Learners Found"));exit;
 			}
 		}else{
 			http_response_code('204');
