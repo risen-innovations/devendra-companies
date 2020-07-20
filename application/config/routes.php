@@ -88,6 +88,7 @@ $route['learners/get-learner-doc'] = 'learners/getLearnerDoc';
 $route['learners/update-learner'] = 'learners/updateLearner';
 $route['learners/search-learner'] = 'learners/searchLearner';
 $route['company/get-company-learners'] = 'company/getCompanyLearners';
+$route['company/get-company-learners-filtered'] = 'company/getCompanyLearnersFiltered';
 $route['company/get-learners-under-company'] = 'company/getLearnersUnderCompany';
 $route['company/latest-application'] = 'company/latestApplication';
 $route['company/get-expiring-core-trades'] = 'company/getExpiringCoreTrades';

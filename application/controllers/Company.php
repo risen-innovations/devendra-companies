@@ -201,6 +201,21 @@ class Company extends CI_Controller
 		}
 	}
 
+	public function getCompanyLearnersFiltered(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$company = json_decode($data,true);
+		$learners = $this->db->select('*')->from('learner')
+					->where('company', $company['company_id'])
+					->get();
+		if($learners->num_rows() > 0){
+			http_response_code('200');
+			echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$learners->result()));exit;
+		}else{
+			http_response_code('204');
+		}
+	}
+
 	public function getCompanyLearners(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
