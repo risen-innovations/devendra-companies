@@ -149,6 +149,7 @@ class Company extends CI_Controller
 		}
 		if(is_null($companies)){
 			http_response_code('204');
+			echo json_encode(array( "status" => false, "message" => 'failure',"data" =>null));exit;
 		}else{
 			http_response_code('200');
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$companies));exit;
@@ -193,6 +194,7 @@ class Company extends CI_Controller
 						->join("learner l","a.learner_id = l.learner_id","left")
 						->group_by('l.learner_id')
 						->get()->result();
+		//echo $this->db->last_query();exit(0);
 		if(!is_null($applications)){
 			http_response_code("200");
 			echo json_encode(array("status" => true, "message" => "Learners Found", "data" => $applications));
