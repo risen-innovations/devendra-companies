@@ -54,7 +54,7 @@ class Learners extends CI_Controller
 		    echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
         }
         http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => 'No learners found'));exit;
+		echo json_encode(array( "status" => false, "message" => 'No learners found', "data"=>null));exit;
     }
 
     public function searchLearner(){
@@ -130,7 +130,7 @@ class Learners extends CI_Controller
 		    echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$row));exit;
         }
         http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => 'No learners found'));exit;
+		echo json_encode(array( "status" => false, "message" => 'No learners found', "data"=>null));exit;
     }
 
     public function getLearnerDoc(){
@@ -184,8 +184,8 @@ class Learners extends CI_Controller
                 http_response_code('200');
                 echo json_encode(array( "status" => true, "message" => 'File found on S3', "data" => $fileURI));exit;
             }catch (Exception $e){
-                http_response_code('404');
-                echo json_encode(array( "status" => false, "message" => $e->getMessage().PHP_EOL));exit;
+                http_response_code('200');
+                echo json_encode(array( "status" => false, "message" => $e->getMessage().PHP_EOL, "data"=>null));exit;
             }
         }
     }
@@ -197,7 +197,7 @@ class Learners extends CI_Controller
         $this->db->where('learner_id', $learner['learner_id']);
         $this->db->update('learner', array('coretrade_expiry' => $learner['CTExpDate']));
         http_response_code('200');
-        echo json_encode(array( "status" => true, "message" => 'Updated Learner'));exit;
+        echo json_encode(array( "status" => true, "message" => 'Updated Learner', "data"=>null));exit;
     }
 
     private function mask($string){
@@ -225,20 +225,20 @@ class Learners extends CI_Controller
 		$account_db = $this->load->database('account',TRUE);
 		$authToken = $this->input->get_request_header('Authorization', TRUE);
 		if(is_null($authToken)){
-			http_response_code('400');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request, Auth Token is required.'));exit;
+			http_response_code('200');
+			echo json_encode(array( "status" => false, "message" => 'Bad Request, Auth Token is required.', "data"=>null));exit;
 		}else{
 			$checkToken = $account_db->select('*')->get_where('auth_tokens',array('auth_token'=>$authToken))->row();
 
 			if(is_null($checkToken)){
-				http_response_code('403');
-				echo json_encode(array( "status" => false, "message" => 'Invalid Authentication Token.'));exit;
+				http_response_code('200');
+				echo json_encode(array( "status" => false, "message" => 'Invalid Authentication Token.', "data"=>null));exit;
 			}
 			$now = time();
 			$expiryDateString = strtotime($checkToken->auth_token_expiry_date);
 			if($expiryDateString < $now){
-				http_response_code('401');
-				echo json_encode(array( "status" => false, "message" => 'Authentication Token has expired.'));exit;
+				http_response_code('200');
+				echo json_encode(array( "status" => false, "message" => 'Authentication Token has expired.', "data"=>null));exit;
 			}
 			$decodeJWT = $this->objOfJwt->DecodeToken($checkToken->issued_to);
 			$data = $account_db->select('*')->get_where('accounts',array('user_id'=>$decodeJWT['user_id']))->row();
@@ -250,23 +250,23 @@ class Learners extends CI_Controller
 	}
 
 	private function show_204(){
-		http_response_code('204');
-		echo json_encode(array( "status" => false, "message" => 'Not Content Found.'));exit;
+		http_response_code('200');
+		echo json_encode(array( "status" => false, "message" => 'Not Content Found.',"data"=>null));exit;
 	}
 
 	private function show_404(){
-		http_response_code('404');
-		echo json_encode(array( "status" => false, "message" => 'Not Found.'));exit;
+		http_response_code('200');
+		echo json_encode(array( "status" => false, "message" => 'Not Found.',"data"=>null));exit;
 	}
 
 	private function show_400(){
-		http_response_code('400');
-		echo json_encode(array( "status" => false, "message" => 'Bad Request.'));exit;
+		http_response_code('200');
+		echo json_encode(array( "status" => false, "message" => 'Bad Request.', "data"=>null));exit;
 	}
 
 	private function show_error_500(){
-		http_response_code('500');
+		http_response_code('200');
 		$message = 'Internal Server Error.';
-		echo json_encode(array( "status" => false, "message" => $message));exit;
+		echo json_encode(array( "status" => false, "message" => $message, "data"=>null));exit;
 	}
 }
