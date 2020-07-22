@@ -910,17 +910,18 @@ class Company extends CI_Controller
 		$companyID = $company['company_id'];
 		$threshold = $this->db->select('threshold')->from('threshold')
 					->where('id', 1)->get()->row();
+		http_response_code("200");
 		if(!is_null($threshold)){
 			$receivables = $this->companyReceivables($companyID);
-			http_response_code("200");
 			if($receivables > $threshold->threshold){
 				echo json_encode(array("status" => true
-										, "message" => "Exceeded Credit Threshold. Unable to Proceed."));
+										, "message" => "Exceeded Credit Threshold. Unable to Proceed."
+										, "data" => $receivables));exit;
 			}else{
-				echo json_encode(array("status" => false, "message" => "Not Exceeded"));
+				echo json_encode(array("status" => false, "message" => "Not Exceeded", "data" => "0.00"));exit;
 			}
 		}else{
-			$this->show_error_500();exit;
+			echo json_encode(array("status" => false, "message" => "No Receivables", "data" => "0.00"));exit;
 		}
 	}
 
@@ -966,7 +967,7 @@ class Company extends CI_Controller
 			array_push($coUnpaid, $res);
 			return $res['receivables'];
 		}else{
-			http_response_code("204");exit;
+			return "0.00";
 		}
 	}
 
