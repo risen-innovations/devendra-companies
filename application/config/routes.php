@@ -81,6 +81,10 @@ $route['company/view-learners'] = 'company/viewLearners';
 $route['company/view-learner-managers'] = 'company/viewLearnerManagers';
 $route['company/deactivate-learner'] = 'company/deactivateLearner';
 $route['company/deactivate-learner-manager'] = 'company/deactivateLearnerManager';
+$route['company/add-learner-remarks'] = 'company/addLearnerRemarks';
+$route['company/get-learner-remarks'] = 'company/getLearnerRemarks';
+$route['company/update-learner-remarks'] = 'company/updateLearnerRemarks';                               
+
 
 $route['learners/get-learners'] = 'learners/getLearners';
 $route['learners/get-learner'] = 'learners/getLearner';
@@ -88,7 +92,6 @@ $route['learners/get-learner-doc'] = 'learners/getLearnerDoc';
 $route['learners/update-learner'] = 'learners/updateLearner';
 $route['learners/search-learner'] = 'learners/searchLearner';
 $route['company/get-company-learners'] = 'company/getCompanyLearners';
-$route['company/get-company-learners-filtered'] = 'company/getCompanyLearnersFiltered';
 $route['company/get-learners-under-company'] = 'company/getLearnersUnderCompany';
 $route['company/latest-application'] = 'company/latestApplication';
 $route['company/get-expiring-core-trades'] = 'company/getExpiringCoreTrades';
