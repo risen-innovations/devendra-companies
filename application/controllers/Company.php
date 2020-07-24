@@ -141,7 +141,7 @@ class Company extends CI_Controller
 		foreach($sql->result() as $co){
 			if(!in_array($role->role, array(1, 2, 3, 5, 9, 10))){
 				$exists =  strstr($co->sales_person, $search['filter_by_value']);
-				//echo $exists;exit(0);
+				
 				if($exists != ""){
 					$companies[] = $co;
 				}
@@ -899,18 +899,17 @@ class Company extends CI_Controller
 		$companyID = $company['company_id'];
 		$threshold = $this->db->select('threshold')->from('threshold')
 					->where('id', 1)->get()->row();
-		http_response_code("200");
 		if(!is_null($threshold)){
 			$receivables = $this->companyReceivables($companyID);
+			http_response_code('200');
 			if($receivables > $threshold->threshold){
 				echo json_encode(array("status" => true
-										, "message" => "Exceeded Credit Threshold. Unable to Proceed."
-										, "data" => $receivables));exit;
+										, "message" => "Exceeded Credit Threshold. Unable to Proceed.", "data"=>null));
 			}else{
-				echo json_encode(array("status" => false, "message" => "Not Exceeded", "data" => "0.00"));exit;
+				echo json_encode(array("status" => false, "message" => "Not Exceeded", "data"=>null));
 			}
 		}else{
-			echo json_encode(array("status" => false, "message" => "No Receivables", "data" => "0.00"));exit;
+			$this->show_error_500();exit;
 		}
 	}
 
@@ -956,7 +955,10 @@ class Company extends CI_Controller
 			array_push($coUnpaid, $res);
 			return $res['receivables'];
 		}else{
-			return "0.00";
+			http_response_code('200');
+			echo json_encode(array("status" => false
+			, "message" => "No data found","data"=>null));exit;
+			exit;
 		}
 	}
 
@@ -1172,6 +1174,73 @@ class Company extends CI_Controller
 
 	}
 
+
+
+	public function getLearnerRemarksByTrainer(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+	
+		$learnerRemarks = json_decode($data,true);
+		if(is_null($learnerRemarks)){
+			$this->show_400();
+		}
+		$event = $this->db->select('*')->from('learner_remarks')
+				->where('trainer_id',$learnerRemarks['trainer_id'])->get();
+		if($event->num_rows() > 0){
+			$learners = $event->row();
+			
+
+		
+			$rows = [];
+		foreach($event->result() as $learner){
+			$name = $this->db->select("l.learner_id, l.name, l.nric, l.fin, l.work_permit as wp, l.company
+					,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
+					,a.status as application_status, a.application_id as application_id, b.filepath as learner_image")->from("learner l")
+					->join("application a", "l.learner_id = a.learner_id", "left")
+					->join("application_doc b", "a.application_id = b.application_id", "left")
+					->where("l.learner_id", $learner->learner_id)
+					->get()->row();
+			
+			if(!is_null($name)){
+				$learner->learner_id = $name->learner_id;
+				$learner->value = $name->learner_id;
+				$learner->learner_name = $name->name;
+				$learner->learner_image = $name->learner_image;
+				$learner->learner_nric = $name->nric;
+				$learner->nric = $name->nric;
+				$learner->learner_fin = $name->fin;
+				$learner->fin = $name->fin;
+				$learner->learner_wp = $name->wp;
+				$learner->wp = $name->wp;
+				$learner->learner_status = $name->learner_status;
+				$learner->invoice_id = $name->invoice_id;
+				$learner->course_id = $name->course_id;
+				$learner->application_id = $name->application_id;
+				$learner->sponsor_company = $name->sponsor_company;
+				$learner->application_status = $name->application_status;
+				$company = $this->db->select("company_name")->from("company")
+							->where("company_id", $name->company)->get()->row();
+				$learner->company_name = $company->company_name;
+				
+			}
+			$rows[] = $learner;
+			
+			
+		}
+		
+		http_response_code('200');
+			echo json_encode(array("status" => true, "message" => "Success"
+			, "data" => $rows));
+			
+		}else{
+			http_response_code('200');
+			echo json_encode(array("status" => false
+			, "message" => "No event found","data"=>null));exit;
+		
+
+		}
+
+	}
 	
 	public function getLearnerRemarks(){
 		$validToken = $this->validToken();
@@ -1196,14 +1265,16 @@ class Company extends CI_Controller
 		foreach($learners as $learner){
 			$name = $this->db->select("l.learner_id, l.name, l.nric, l.fin, l.work_permit as wp, l.company
 					,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
-					,a.status as application_status")->from("learner l")
+					,a.status as application_status,a.application_id as application_id, b.filepath as learner_image")->from("learner l")
 					->join("application a", "l.learner_id = a.learner_id", "left")
+					->join("application_doc b", "a.application_id = b.application_id", "left")
 					->where("l.learner_id", $learner->learner_id)
 					->get()->row();
 			if(!is_null($name)){
 				$learner->learner_id = $name->learner_id;
 				$learner->value = $name->learner_id;
 				$learner->learner_name = $name->name;
+				$learner->learner_image = $name->learner_image;
 				$learner->learner_nric = $name->nric;
 				$learner->nric = $name->nric;
 				$learner->learner_fin = $name->fin;

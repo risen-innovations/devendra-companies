@@ -84,7 +84,7 @@ $route['company/deactivate-learner-manager'] = 'company/deactivateLearnerManager
 $route['company/add-learner-remarks'] = 'company/addLearnerRemarks';
 $route['company/get-learner-remarks'] = 'company/getLearnerRemarks';
 $route['company/update-learner-remarks'] = 'company/updateLearnerRemarks';                               
-
+$route['company/get-Learner-Remarks-By-Trainer'] = 'company/getLearnerRemarksByTrainer';  
 
 $route['learners/get-learners'] = 'learners/getLearners';
 $route['learners/get-learner'] = 'learners/getLearner';
