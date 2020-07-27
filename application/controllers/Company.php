@@ -221,10 +221,30 @@ class Company extends CI_Controller
 						->join("learner l","a.learner_id = l.learner_id","left")
 						->group_by('l.learner_id')
 						->get()->result();
-		echo $this->db->last_query();exit(0);
+		//echo $this->db->last_query();exit(0);
 		if(!is_null($applications)){
 			http_response_code("200");
-			echo json_encode(array("status" => true, "message" => "Learners Found", "data" => $applications));
+			echo json_encode(array("status" => true, "message" => "Learners Found", "data" => $applications));exit;
+		}else{
+			http_response_code("200");
+			echo json_encode(array("status" => false
+			, "message" => "No Learners found","data"=>null));exit;
+		}
+	}
+
+	public function getLearnersLeftCompany(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$company = json_decode($data,true);
+		$left = $this->db->select('lc.learner_id, l.name, l.nric, l.work_permit, l.fin')
+				->from('learners_company_change lc')
+				->join('learner l','lc.learner_id = l.learner_id','left')
+				->where('lc.old_company_id', $company['company_id'])
+				->group_by('l.learner_id')
+				->get()->result();
+		if(!is_null($left)){
+			http_response_code("200");
+			echo json_encode(array("status" => true, "message" => "Learners Left Found", "data" => $left));exit;
 		}else{
 			http_response_code("200");
 			echo json_encode(array("status" => false
