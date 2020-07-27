@@ -174,6 +174,31 @@ class Company extends CI_Controller
 		}
 	}
 
+	public function getCompanyInvoices(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$company = json_decode($data,true);
+		if(is_null($company)){
+			$this->show_400();
+		}else{
+			$company_id = $company['company_id'];
+			$sales_db = $this->load->database("sales", true);
+			$sql = $sales_db->select('*')->from('invoices')
+					->where('company_id', $company_id)
+					->order_by('invoice_id','desc')->get();
+			$invoices = array();
+			foreach($sql->result() as $invoice){
+				$invoices[] = $invoice;
+			}
+			if(is_null($invoices)){
+				$this->show_400();
+			}else{
+				http_response_code('200');
+				echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$invoices));exit;
+			}
+		}
+	}
+
 	private function getSelectedLearners($iid){
 		$sales_db = $this->load->database("sales", TRUE);
 		$existing = $sales_db->select("learner_id")->from("invoice_items_learners")
@@ -404,6 +429,68 @@ class Company extends CI_Controller
 		$data = file_get_contents('php://input');
 		$searchKeyword = json_decode($data,true);
 		$applications = $this->company_model->filterApplications($searchKeyword);
+	}
+
+	public function checkLearner(){
+		$validToken  = $this->validToken();
+		$data = file_get_contents('php://input');
+		$learner = json_decode($data,true);
+		$learner['learner_ids']['nric'] == "" ? 
+			$learner['learner_ids']['nric'] = "ZZZ" : 
+			$learner['learner_ids']['nric'] = $learner['learner_ids']['nric'];
+		$learner['learner_ids']['fin'] == "" ? 
+			$learner['learner_ids']['fin'] = "ZZZ" : 
+			$learner['learner_ids']['fin'] = $learner['learner_ids']['fin'];
+		$learner['learner_ids']['work_permit'] == "" ? 
+			$learner['learner_ids']['work_permit'] = "ZZZ" : 
+			$learner['learner_ids']['work_permit'] = $learner['learner_ids']['work_permit'];
+		$learner_exists = $this->db->select('*')->from('learner')
+							->or_where('nric', $learner['learner_ids']['nric'])
+							->or_where('work_permit', $learner['learner_ids']['work_permit'])
+							->or_where('fin', $learner['learner_ids']['fin'])
+							->get();
+		if($learner_exists->num_rows() > 0){
+			$res = $learner_exists->row();
+			if($res->company != $learner['company_id']){
+				http_response_code('200');
+				echo json_encode(array("status" => true, 
+						"message" => "Learner Exists in different company. Change of company will proceed.", "data" => $res));exit;
+			}else{
+				http_response_code('200');
+				echo json_encode(array("status" => true, 
+							"message" => "Learner Exists for this company already", "data" => false));exit;
+			}
+		}else{
+			http_response_code('200');
+			echo json_encode(array("status" => false, "message" => "Learner Does Not Exist", "data" => null));exit;
+		}
+	}
+
+	public function logCompanyChange(){
+		$validToken  = $this->validToken();
+		$data = file_get_contents('php://input');
+		$change = json_decode($data,true);
+		$this->db->insert("learners_company_change", $change);
+		if($update){
+			http_response_code('200');
+			echo json_encode(array("status" => false, "message" => "Logged Learner Company Change", "data" => null));exit;
+		}else{
+			$this->show_error_500();
+		}
+	}
+
+	public function updateLearnerCompany(){
+		$validToken  = $this->validToken();
+		$data = file_get_contents('php://input');
+		$change = json_decode($data,true);
+		$this->db->where('learner_id', $change['learner_id']);
+		$update = $this->db->update("learner", array("company" => $change['company']));
+		if($update){
+			http_response_code('200');
+			echo json_encode(array("status" => true, "message" => "Update", "data" => null));exit;
+		}else{
+			$this->show_error_500();
+		}
 	}
 
 	public function checkUEN(){
