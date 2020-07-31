@@ -1291,7 +1291,7 @@ class Company extends CI_Controller
 		if(is_null($learnerRemarks)){
 			$this->show_400();
 		}
-		$event_db = $this->load->database("event", true);
+		$event_db = $this->load->database("scheduling", true);
 		if($learnerRemarks['event_type']==3)
 		{
 		
