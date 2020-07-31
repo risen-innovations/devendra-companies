@@ -1283,6 +1283,430 @@ class Company extends CI_Controller
 
 
 
+	public function getLearnerByTrainer(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+	
+		$learnerRemarks = json_decode($data,true);
+		if(is_null($learnerRemarks)){
+			$this->show_400();
+		}
+		$event_db = $this->load->database("event", true);
+		if($learnerRemarks['event_type']==3)
+		{
+		
+		$event = $event_db->select('e.id,learner_id')->from('events e')
+				->join("events_learners l","l.event_id = e.id")
+				->where('assessor',$learnerRemarks['assessor'])
+				->where('event_type',3)->get();
+		}
+		else {
+			$event = $event_db->select('e.id,learner_id')->from('events e')
+				->join("events_learners l","l.event_id = e.id")
+				->where('assessor',$learnerRemarks['assessor'])
+				->where('event_type in (1,2) ')->get();
+		}
+		
+		
+		
+		if($event->num_rows() > 0){
+			
+			//$event_id = $event->result();
+			
+			//foreach($event_id as $events)
+			//{
+				
+				//$eventid=$events->id;
+				
+				//$learner_id = $event_db->select('learner_id')->from('events_learners')
+				//						->where('event_id',$eventid)->get();
+				foreach($event->result() as $learner){
+
+				$learname = $this->db->select("l.learner_id, l.name, l.nric, l.fin, l.work_permit as wp, l.company
+									,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
+									,a.status as application_status, a.application_id as application_id, b.filepath as learner_image,
+									c.remarks as learner_remarks, c.date as remarks_date")->from("learner l")
+									->join("application a", "l.learner_id = a.learner_id", "left")
+									->join("learner_remarks c", "l.learner_id = c.learner_id", "left")
+									->join("application_doc b", "a.application_id = b.application_id", "left")
+									->where("l.learner_id", $learner->learner_id)
+									->get()->row();
+											
+				if(!is_null($learname)){
+					
+					$learner->learner_id = $learname->learner_id;
+					$learner->event_id = $learner->id;
+					// $learner->value = $learname->learner_id;
+					$learner->learner_name = $learname->name;
+					// $learner->learner_image = $name->learner_image;
+					
+					// $learner->learner_nric = $learname->nric;
+					// $learner->nric = $learname->nric;
+					// $learner->learner_fin = $learname->fin;
+					// $learner->fin = $learname->fin;
+					// $learner->learner_wp = $learname->wp;
+					// $learner->wp = $learname->wp;
+					// $learner->learner_status = $learname->learner_status;
+					// $learner->invoice_id = $learname->invoice_id;
+					// $learner->course_id = $learname->course_id;
+					// $learner->application_id = $learname->application_id;
+					$learner->remarks = $learname->learner_remarks;
+					$learner->remarks_date = $learname->remarks_date;
+					// $learner->sponsor_company = $learname->sponsor_company;
+					// $learner->application_status = $learname->application_status;
+					$company = $this->db->select("company_name")->from("company")
+										->where("company_id", $learname->company)->get()->row();
+					$learner->company_name = $company->company_name;	
+					$learner->learner_image = $this->getFile($learname->learner_image);						
+					$rows[] =$learner;			
+				}
+				
+												
+			}
+			
+				 http_response_code('200');
+				echo json_encode(array("status" => true, "message" => "Success", "data" => $rows));	
+			
+		//}
+		
+		}else{
+			http_response_code('200');
+			echo json_encode(array("status" => false
+			, "message" => "No event found","data"=>null));exit;
+		
+
+		}
+
+	}
+	
+	public function listLearnerByRetest(){
+		$validToken = $this->validToken();
+		
+				$learname = $this->db->select("l.learner_id, l.name, l.company
+									,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
+									,a.status as application_status, a.application_id as application_id, b.filepath as learner_imagebase64,
+									")->from("learner l")
+									->join("application a", "l.learner_id = a.learner_id", "left")
+									->join("learners_results c", "l.learner_id = c.learner_id", "left")
+									->join("application_doc b", "a.application_id = b.application_id", "left")
+									->where('c.result',3)
+									->group_by('c.learner_id')
+									->get();
+
+			if($learname->num_rows() > 0){
+				foreach($learname->result() as $learner)
+				{
+								
+				if(!is_null($learname)){
+					
+					$learner->learner_id = $learner->learner_id;
+					$learner->learner_name = $learner->name;
+					$company = $this->db->select("company_name")->from("company")
+										->where("company_id", $learner->company)->get()->row();
+					$learner->company_name = $company->company_name;	
+					$learner->learner_image = $this->getFile($learner->learner_imagebase64);						
+					$rows[] =$learner;			
+				}
+				
+				}	
+			
+				http_response_code('200');
+				echo json_encode(array("status" => true, "message" => "Success", "data" => $rows));	
+			}
+			else
+			{
+				http_response_code('200');
+				echo json_encode(array("status" => false, "message" => "No data found", "data" =>null));	
+			}
+
+	}
+
+	public function getLearnerDetailsbyCourse(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+	
+		$learnerinfo = json_decode($data,true);
+		if(is_null($learnerinfo)){
+			$this->show_400();
+		}
+	
+		$learners = $this->db->select('learner_id')->from('application')
+				
+				->where('course_id',$learnerinfo['course_id'])
+				->get();
+		
+		
+		
+		if($learners->num_rows() > 0){
+			$i = 0;
+			$learnsresult = $learners->result();
+			 
+			 
+				foreach( $learnsresult as $learnerdetails){
+					
+				$name = $this->db->select("l.learner_id, l.name, l.company,
+									 a.course_id, b.filepath as learner_image")->from("learner l")
+									->join("application a", "l.learner_id = a.learner_id", "left")
+									->join("application_doc b", "a.application_id = b.application_id", "left")
+									->where("l.learner_id", $learnerdetails->learner_id)
+									->get()->row();
+				 
+				if(!is_null($name)){
+					
+					$learnerdetails->learner_id = $name->learner_id;
+					$learnerdetails->learner_name = $name->name;
+ 					 $company = $this->db->select("company_name")->from("company")
+								->where("company_id", $name->company)->get()->row();
+					$learnerdetails->company_name = $company->company_name;	
+					$learner->learner_image = $this->getFile($name->learner_image);						
+					$recs[]=$learnerdetails; 
+					 
+					
+				}
+				
+												
+			}
+			http_response_code('200');
+				echo json_encode(array("status" => true, "message" => "Success", "data" => $recs));	
+		
+		}else{
+			http_response_code('200');
+			echo json_encode(array("status" => false
+			, "message" => "No event found","data"=>null));exit;
+		
+
+		}
+
+	}
+
+	public function addLearnerResults()
+	{
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$learnerResult = json_decode($data,true);
+			
+		if(is_null($learnerResult)){
+			$this->show_400();
+		}
+		$result = $this->db->select("*")->from("learners_results")
+				->where("learner_id",$learnerResult['learner_id'])
+				->where("event_id",$learnerResult['event_id'])
+				->get();
+
+
+	if($result->num_rows() > 0){
+		$update = $this->db->where('learner_id', $learnerResult['learner_id'])
+							->where('event_id', $learnerResult['event_id'])
+					->update('learners_results', $learnerResult);
+		if($update){
+						
+				echo json_encode(array("status" => true, "message" => "Successfully Updated"
+				, "data" => null));exit;
+		}else{
+					
+			http_response_code('200');
+			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>null));exit;
+		}
+		}
+		$insertData = array("learner_id" => $learnerResult['learner_id']
+						,"event_id" => $learnerResult["event_id"]
+						
+						, "result" => $learnerResult["result"]);
+		
+		$insert = $this->db->insert("learners_results", $insertData);
+		$insert_id = $this->db->insert_id();
+	
+		if($insert)
+		{
+		http_response_code('200');
+		$data =  $this->db->select('*')->get_where('learners_results',array('id'=>$insert_id))->row();
+		echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
+		}
+		else
+		{
+			http_response_code('200');
+			echo json_encode(array( "status" => false, "message" => 'No Result added',"data" =>null));exit;
+		}
+
+
+	}
+
+	public function getFile($fileName){
+		try{
+
+			
+			//$this->setAuditLog($validToken,48);
+			$object = $this->s3Client->getObject(array(
+				'Bucket' => 'ri-company-service',
+				//'Key'    => $file->name,
+				'Key'    => $fileName,
+				//'@http'  => ['sink' => $path]
+			));
+			$fileName = explode('/',$fileName);
+			
+			$len = count($fileName);
+			$ext = explode('.',$fileName[$len - 1]);
+			$extlen = count($ext);
+			$ext = $ext[$extlen -1];
+			$fileName = $fileName[$len - 1];
+
+		
+			//$path = 'assets/'.$fileName;
+			$contentType = "image/png";
+			switch(strtolower($ext)){
+				case 'jpg':
+					$contentType = 'image/jpeg';
+					break;
+				case 'jpeg':
+						$contentType = 'image/jpeg';
+						break;
+				case 'pdf':
+					$contentType = 'application/pdf';
+					break;
+				case 'default':
+					$contentType = 'image/jpeg';
+					break;
+			}
+			header('Content-Description: File Transfer');
+			//this assumes content type is set when uploading the file.
+			header('Content-Disposition: attachment; filename=' .$fileName);//$fileName);
+			header("Content-Type: {$object['ContentType']}");
+			header('Expires: 0');
+			header('Cache-Control: must-revalidate');
+			header('Pragma: public');
+
+			//send file to browser for download.
+			//echo $object["Body"];
+			$fileBase64 = base64_encode($object["Body"]);
+			$fileURI = 'data: '.$contentType.';base64,'.$fileBase64;
+		
+			//echo $fileURI;exit(0);
+			return $fileURI;
+		}catch (Exception $e){
+			return "";
+			//http_response_code('404');
+			//echo json_encode(array( "status" => false, "message" => "No object found on S3"));exit;
+		}
+	}
+
+	public function getLearnerDetails(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+	
+		$learnerRemarks = json_decode($data,true);
+		if(is_null($learnerRemarks)){
+			$this->show_400();
+		}
+		
+			$name = $this->db->select("l.learner_id, l.name,l.nationality,l.dob,l.sex, l.nric, l.fin, l.work_permit as wp, l.company
+					,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
+					,a.status as application_status,a.application_id as application_id, b.filepath as learner_image")->from("learner l")
+					->join("application a", "l.learner_id = a.learner_id", "left")
+					->join("application_doc b", "a.application_id = b.application_id", "left")
+					->where("l.learner_id", $learnerRemarks['learner_id'])
+					->get()->row();
+			if(!is_null($name)){
+				$learner->learner_id = $name->learner_id;
+				$learner->value = $name->learner_id;
+				$learner->learner_name = $name->name;
+				$learner->status = $name->learner_status;
+				$learner->learner_image =  $this->getFile($name->learner_image);
+				$learner->learner_nric = $name->nric;
+				$learner->learner_dob = $name->dob;
+				$learner->learner_sex = $name->sex;
+				$learner->learner_nationality = $name->nationality;
+				$learner->nric = $name->nric;
+				$learner->learner_fin = $name->fin;
+				$learner->fin = $name->fin;
+				$learner->learner_wp = $name->wp;
+				$learner->wp = $name->wp;
+				$learner->learner_status = $name->learner_status;
+				$learner->invoice_id = $name->invoice_id;
+				$learner->course_id = $name->course_id;
+				$learner->sponsor_company = $name->sponsor_company;
+				$learner->application_status = $name->application_status;
+				$company = $this->db->select("company_id,company_name,uen,contact_person,contact_number,contact_email,fax,postal_code,street,unit")->from("company")
+							->where("company_id", $name->company)->get()->row();
+				$learner->company_name = $company->company_name;
+				$learner->company_id = $company->company_id;
+				$learner->uen = $company->uen;
+				$learner->contact_person = $company->contact_person;
+				$learner->contact_number = $company->contact_number;
+				$learner->contact_email = $company->contact_email;
+				$learner->fax = $company->fax;
+				$learner->postal_code = $company->postal_code;
+				$learner->street = $company->street;
+				$learner->unit = $company->unit;
+
+				$event = $this->db->select('*')->from('learner_remarks')
+						->where('learner_id',$learnerRemarks['learner_id'])->get()->row();
+				$learner->learner_remarks = $event;
+		
+			// $rows[] = $learner;		
+			http_response_code('200');
+			echo json_encode(array("status" => true, "message" => "Success"
+			, "data" => $learner));exit;
+		
+		}
+		else {
+			http_response_code('200');
+			echo json_encode(array("status" => false , "message" => "No Learners found","data"=>null));exit;
+		}
+		
+
+		}
+			
+	
+
+	public function updateLearnerRemarks()
+	{
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$remarksData = json_decode($data,true);
+			
+		if(is_null($remarksData)){
+			$this->show_400();
+		}
+		http_response_code('200');
+		$exams = $this->db->select("*")->from("learner_remarks")
+				->where("learner_id",$remarksData['learner_id'])
+				->where("trainer_id",$remarksData['trainer_id'])
+				->get();
+		if($exams->num_rows() > 0){
+			$update = $this->db->where('learner_id', $remarksData['learner_id'],$remarksData['trainer_id'])
+					->update('learner_remarks', $remarksData);
+			if($update){
+				
+				echo json_encode(array("status" => true, "message" => "Successfully Updated"
+				, "data" => null));exit;
+			}else{
+			
+			http_response_code('200');
+			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>null));exit;
+			}
+		}
+		$insertData = array("learner_id" => $remarksData['learner_id']
+							,"trainer_id" => $remarksData["trainer_id"]
+							, "remarks" => $remarksData["remarks"]);
+
+		$this->db->insert("learner_remarks", $insertData);
+		$insert_id = $this->db->insert_id();
+		if($insert_id)
+		{
+			http_response_code('200');
+			$data =  $this->db->select('*')->get_where('learner_remarks',array('id'=>$insert_id))->row();
+			echo json_encode(array( "status" => true, "message" => 'Successfully Inserted',"data" =>$data));exit;
+		}
+		else
+		{
+			http_response_code('200');
+			echo json_encode(array( "status" => false, "message" => 'No Remarks added',"data" =>null));exit;
+		}
+
+		exit;
+
+	}
+	
 	public function getLearnerRemarksByTrainer(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
@@ -1415,35 +1839,7 @@ class Company extends CI_Controller
 		}
 
 	}
-
-	public function updateLearnerRemarks()
-	{
-		$validToken = $this->validToken();
-		$data = file_get_contents('php://input');
-		$remarksData = json_decode($data,true);
-			
-		if(is_null($remarksData)){
-			$this->show_400();
-		}
-		http_response_code('200');
-		$update = $this->db->where('id', $remarksData['id'])
-					->update('learner_remarks', $remarksData);
-		if($update){
-			$data =  $this->db->select('*')
-						->get_where('learner_remarks',array('id'=>$remarksData['id']))->row();
-			echo json_encode(array("status" => true, "message" => "Successfully Updated"
-			, "data" => $data));
-		}else{
-			
-			http_response_code('200');
-			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>null));
-		}
-		exit;
-
-	}
-
-
-
+	
 	private function mask($string){
         $strMaskLen = strlen($string) - 4;
         $strMask = "";

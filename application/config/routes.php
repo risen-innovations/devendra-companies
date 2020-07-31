@@ -86,8 +86,11 @@ $route['company/view-learner-managers'] = 'company/viewLearnerManagers';
 $route['company/deactivate-learner'] = 'company/deactivateLearner';
 $route['company/deactivate-learner-manager'] = 'company/deactivateLearnerManager';
 $route['company/add-learner-remarks'] = 'company/addLearnerRemarks';
-$route['company/get-learner-remarks'] = 'company/getLearnerRemarks';
-$route['company/update-learner-remarks'] = 'company/updateLearnerRemarks';                               
+$route['company/get-learner-details'] = 'company/getLearnerDetails';
+$route['company/update-learner-remarks'] = 'company/updateLearnerRemarks';
+$route['company/get-learner-by-trainer'] = 'company/getLearnerByTrainer';  
+$route['company/add-learner-results'] = 'company/addLearnerResults';     
+$route['company/get-learnerDetails-byCourse'] = 'company/getLearnerDetailsbyCourse';                              
 $route['company/get-Learner-Remarks-By-Trainer'] = 'company/getLearnerRemarksByTrainer';  
 
 $route['learners/get-learners'] = 'learners/getLearners';
