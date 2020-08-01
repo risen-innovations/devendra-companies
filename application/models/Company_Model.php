@@ -162,7 +162,10 @@ class Company_model extends CI_Model
 				$company_name = $this->db->select('company_name')->from('company')
 								->where('company_id', $row->company_id)
 								->get()->row();
-				$row->company_name = $company_name->company_name;
+				$row->company_name = "";
+				if(!is_null($company_name)){
+					$row->company_name = $company_name->company_name;
+				}
 
 				$course = $courses_db->select('*')->from('courses c')
 						->join('trade_type tt','c.trade_type = tt.id','left')
@@ -259,9 +262,24 @@ class Company_model extends CI_Model
 		}
 	}
 
+	private function checkUENExists($UEN){
+		$co = $this->db->select('company_id')->from('company')
+				->where('uen',$uen)->get();
+		$hash = null;
+		if($co->num_rows > 0){
+			$hash = $co->row();
+			$hash = $hash->company_id;
+		}	
+		return $hash;
+	}
+
 	public function newApplication($applicationData)
 	{
-		$UENHash = hash('sha256',$applicationData['uen']);
+		$uenExists = $this->checkUENExists($applicationData['uen']);
+		$UENHash = $uenExists;
+		if(is_null($uenExists)){
+			$UENHash = hash('sha256',$applicationData['uen']);
+		}
 		//learner
 		$learner_data['learner_id'] = hash('sha256',$applicationData['applicantNRIC']);
 		$learner_data['name'] = $applicationData['applicantName'];
