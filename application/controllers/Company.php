@@ -4,6 +4,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 require APPPATH . '/libraries/CreatorJwt.php';
 require APPPATH . '/libraries/AWSS3.php';
 
+use Aws\Common\Exception\MultipartUploadException;
+use Aws\S3\MultipartUploader;
+use Aws\S3\S3Client;
+
 class Company extends CI_Controller
 {
 
@@ -12,7 +16,15 @@ class Company extends CI_Controller
 		parent::__construct();
 		$this->load->model('company_model');
 		$this->objOfJwt = new CreatorJwt();
-		$this->AWSS3 = new AWSS3();
+		// Instantiate an Amazon S3 client.
+		$this->s3Client = new Aws\S3\S3Client([
+			'region'  => 'ap-southeast-1',
+			'version' => 'latest',
+			'credentials' => [
+				'key'    => "AKIAILFHEMIUXHACESVQ",
+				'secret' => "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"
+			]
+		]);
 		header('Content-Type: application/json');
 	}
 
@@ -1286,7 +1298,7 @@ class Company extends CI_Controller
 	public function getLearnerByTrainer(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
-	
+		$today = date_format(date_create(), "Y-m-d");
 		$learnerRemarks = json_decode($data,true);
 		if(is_null($learnerRemarks)){
 			$this->show_400();
@@ -1294,11 +1306,12 @@ class Company extends CI_Controller
 		$event_db = $this->load->database("scheduling", true);
 		if($learnerRemarks['event_type']==3)
 		{
-		
-		$event = $event_db->select('e.id,learner_id')->from('events e')
-				->join("events_learners l","l.event_id = e.id")
-				->where('assessor',$learnerRemarks['assessor'])
-				->where('event_type',3)->get();
+			$event = $event_db->select('e.id,learner_id')->from('events e')
+					->join("events_learners l","l.event_id = e.id")
+					->join('events_dates ed', 'e.id = ed.event_id', 'left')
+					->where('assessor',$learnerRemarks['assessor'])
+					->where('ed.date', $today)
+					->where('event_type',3)->get();
 		}
 		else {
 			$event = $event_db->select('e.id,learner_id')->from('events e')
@@ -1306,8 +1319,6 @@ class Company extends CI_Controller
 				->where('assessor',$learnerRemarks['assessor'])
 				->where('event_type in (1,2) ')->get();
 		}
-		
-		
 		
 		if($event->num_rows() > 0){
 			
@@ -1322,22 +1333,21 @@ class Company extends CI_Controller
 				//						->where('event_id',$eventid)->get();
 				foreach($event->result() as $learner){
 
-				$learname = $this->db->select("l.learner_id, l.name, l.nric, l.fin, l.work_permit as wp, l.company
+				$learnerName = $this->db->select("l.learner_id, l.name, l.nric, l.fin, l.work_permit as wp, l.company
 									,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
 									,a.status as application_status, a.application_id as application_id, b.filepath as learner_image,
-									c.remarks as learner_remarks, c.date as remarks_date")->from("learner l")
+									c.remarks as learner_remarks, c.datetime_created as remarks_date")->from("learner l")
 									->join("application a", "l.learner_id = a.learner_id", "left")
 									->join("learner_remarks c", "l.learner_id = c.learner_id", "left")
 									->join("application_doc b", "a.application_id = b.application_id", "left")
 									->where("l.learner_id", $learner->learner_id)
 									->get()->row();
-											
-				if(!is_null($learname)){
+				if(!is_null($learnerName)){
 					
-					$learner->learner_id = $learname->learner_id;
+					$learner->learner_id = $learnerName->learner_id;
 					$learner->event_id = $learner->id;
 					// $learner->value = $learname->learner_id;
-					$learner->learner_name = $learname->name;
+					$learner->learner_name = $learnerName->name;
 					// $learner->learner_image = $name->learner_image;
 					
 					// $learner->learner_nric = $learname->nric;
@@ -1350,31 +1360,26 @@ class Company extends CI_Controller
 					// $learner->invoice_id = $learname->invoice_id;
 					// $learner->course_id = $learname->course_id;
 					// $learner->application_id = $learname->application_id;
-					$learner->remarks = $learname->learner_remarks;
-					$learner->remarks_date = $learname->remarks_date;
+					$learner->remarks = $learnerName->learner_remarks;
+					$learner->remarks_date = $learnerName->remarks_date;
 					// $learner->sponsor_company = $learname->sponsor_company;
 					// $learner->application_status = $learname->application_status;
 					$company = $this->db->select("company_name")->from("company")
-										->where("company_id", $learname->company)->get()->row();
+										->where("company_id", $learnerName->company)->get()->row();
 					$learner->company_name = $company->company_name;	
-					$learner->learner_image = $this->getFile($learname->learner_image);						
+					$learner->learner_image = $this->getFile($learnerName->learner_image);						
 					$rows[] =$learner;			
 				}
 				
 												
 			}
 			
-				 http_response_code('200');
-				echo json_encode(array("status" => true, "message" => "Success", "data" => $rows));	
-			
-		//}
-		
+			http_response_code('200');
+			echo json_encode(array("status" => true, "message" => "Success", "data" => $rows));
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
 			, "message" => "No event found","data"=>null));exit;
-		
-
 		}
 
 	}
@@ -1494,16 +1499,14 @@ class Company extends CI_Controller
 				->get();
 
 
-	if($result->num_rows() > 0){
-		$update = $this->db->where('learner_id', $learnerResult['learner_id'])
-							->where('event_id', $learnerResult['event_id'])
-					->update('learners_results', $learnerResult);
+		if($result->num_rows() > 0){
+			$update = $this->db->where('learner_id', $learnerResult['learner_id'])
+						->where('event_id', $learnerResult['event_id'])
+						->update('learners_results', $learnerResult);
 		if($update){
-						
 				echo json_encode(array("status" => true, "message" => "Successfully Updated"
 				, "data" => null));exit;
 		}else{
-					
 			http_response_code('200');
 			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>null));exit;
 		}
@@ -1592,69 +1595,91 @@ class Company extends CI_Controller
 	public function getLearnerDetails(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
-	
+		$course_db = $this->load->database("courses", true);
 		$learnerRemarks = json_decode($data,true);
 		if(is_null($learnerRemarks)){
 			$this->show_400();
 		}
 		
-			$name = $this->db->select("l.learner_id, l.name,l.nationality,l.dob,l.sex, l.nric, l.fin, l.work_permit as wp, l.company
-					,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
-					,a.status as application_status,a.application_id as application_id, b.filepath as learner_image")->from("learner l")
-					->join("application a", "l.learner_id = a.learner_id", "left")
-					->join("application_doc b", "a.application_id = b.application_id", "left")
-					->where("l.learner_id", $learnerRemarks['learner_id'])
-					->get()->row();
-			if(!is_null($name)){
-				$learner->learner_id = $name->learner_id;
-				$learner->value = $name->learner_id;
-				$learner->learner_name = $name->name;
-				$learner->status = $name->learner_status;
-				$learner->learner_image =  $this->getFile($name->learner_image);
-				$learner->learner_nric = $name->nric;
-				$learner->learner_dob = $name->dob;
-				$learner->learner_sex = $name->sex;
-				$learner->learner_nationality = $name->nationality;
-				$learner->nric = $name->nric;
-				$learner->learner_fin = $name->fin;
-				$learner->fin = $name->fin;
-				$learner->learner_wp = $name->wp;
-				$learner->wp = $name->wp;
-				$learner->learner_status = $name->learner_status;
-				$learner->invoice_id = $name->invoice_id;
-				$learner->course_id = $name->course_id;
-				$learner->sponsor_company = $name->sponsor_company;
-				$learner->application_status = $name->application_status;
-				$company = $this->db->select("company_id,company_name,uen,contact_person,contact_number,contact_email,fax,postal_code,street,unit")->from("company")
-							->where("company_id", $name->company)->get()->row();
-				$learner->company_name = $company->company_name;
-				$learner->company_id = $company->company_id;
-				$learner->uen = $company->uen;
-				$learner->contact_person = $company->contact_person;
-				$learner->contact_number = $company->contact_number;
-				$learner->contact_email = $company->contact_email;
-				$learner->fax = $company->fax;
-				$learner->postal_code = $company->postal_code;
-				$learner->street = $company->street;
-				$learner->unit = $company->unit;
+		$name = $this->db->select("l.learner_id, l.name,l.nationality,l.dob,l.sex, l.nric, l.fin, l.work_permit as wp, l.company
+				,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
+				,a.status as application_status,a.application_id as application_id, b.filepath as learner_image")->from("learner l")
+				->join("application a", "l.learner_id = a.learner_id", "left")
+				->join("application_doc b", "a.application_id = b.application_id", "left")
+				->where("l.learner_id", $learnerRemarks['learner_id'])
+				->get()->row();
+		$learner = new \stdClass();
+		if(!is_null($name)){
+			$learner->learner_id = $name->learner_id;
+			$learner->value = $name->learner_id;
+			$learner->learner_name = $name->name;
+			$learner->status = $name->learner_status;
+			$learner->learner_image =  $this->getFile($name->learner_image);
+			$learner->learner_nric = $name->nric;
+			$learner->learner_dob = $name->dob;
+			$learner->learner_sex = $name->sex;
+			$learner->learner_nationality = $name->nationality;
+			$learner->nric = $name->nric;
+			$learner->learner_fin = $name->fin;
+			$learner->fin = $name->fin;
+			$learner->learner_wp = $name->wp;
+			$learner->wp = $name->wp;
+			$learner->learner_status = $name->learner_status;
+			$learner->invoice_id = $name->invoice_id;
+			$learner->course_id = $name->course_id;
+			$learner->sponsor_company = $name->sponsor_company;
+			$learner->application_status = $name->application_status;
+			$company = $this->db->select("company_id,company_name,uen,contact_person,contact_number,contact_email,fax,postal_code,street,unit")->from("company")
+						->where("company_id", $name->company)->get()->row();
+			$learner->company_name = $company->company_name;
+			$learner->company_id = $company->company_id;
+			$learner->uen = $company->uen;
+			$learner->contact_person = $company->contact_person;
+			$learner->contact_number = $company->contact_number;
+			$learner->contact_email = $company->contact_email;
+			$learner->fax = $company->fax;
+			$learner->postal_code = $company->postal_code;
+			$learner->street = $company->street;
+			$learner->unit = $company->unit;
+			$course = $course_db->select('course_name')->from('courses')
+						->where("id", $name->course_id)
+						->get()->row();
+			$learner->course = $course->course_name;
 
-				$event = $this->db->select('*')->from('learner_remarks')
-						->where('learner_id',$learnerRemarks['learner_id'])->get()->row();
-				$learner->learner_remarks = $event;
-		
+			$event = $this->db->select('*')->from('learner_remarks lr')
+					->where('lr.learner_id',$learnerRemarks['learner_id'])->get()->result();
+			if(!is_null($event)){
+				$acc_db = $this->load->database("account", true);
+				$event_db = $this->load->database("scheduling", true);
+				foreach($event as $e){
+					$schedule = $event_db->select('course_id')->from('events')
+								->where('id', $e->event_id)
+								->get()->row();
+					$course = $course_db->select('course_name')->from('courses')
+								->where("id", $schedule->course_id)
+								->get()->row();
+					$trainer = $acc_db->select('name')->from('accounts')
+								->where("user_id", $e->trainer_id)
+								->get()->row();
+					$e->trainer = $trainer->name;
+					$e->course = $course->course_name;
+				}
+			}
+			$learner->learner_remarks = $event;
+			
 			// $rows[] = $learner;		
 			http_response_code('200');
 			echo json_encode(array("status" => true, "message" => "Success"
 			, "data" => $learner));exit;
-		
+	
 		}
 		else {
 			http_response_code('200');
 			echo json_encode(array("status" => false , "message" => "No Learners found","data"=>null));exit;
 		}
-		
+	
 
-		}
+	}
 			
 	
 
@@ -1668,11 +1693,11 @@ class Company extends CI_Controller
 			$this->show_400();
 		}
 		http_response_code('200');
-		$exams = $this->db->select("*")->from("learner_remarks")
+		/*$exams = $this->db->select("*")->from("learner_remarks")
 				->where("learner_id",$remarksData['learner_id'])
 				->where("trainer_id",$remarksData['trainer_id'])
 				->get();
-		if($exams->num_rows() > 0){
+		/*if($exams->num_rows() > 0){
 			$update = $this->db->where('learner_id', $remarksData['learner_id'],$remarksData['trainer_id'])
 					->update('learner_remarks', $remarksData);
 			if($update){
@@ -1684,9 +1709,10 @@ class Company extends CI_Controller
 			http_response_code('200');
 			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>null));exit;
 			}
-		}
+		}*/
 		$insertData = array("learner_id" => $remarksData['learner_id']
 							,"trainer_id" => $remarksData["trainer_id"]
+							,"event_id" => $remarksData["event_id"]
 							, "remarks" => $remarksData["remarks"]);
 
 		$this->db->insert("learner_remarks", $insertData);
