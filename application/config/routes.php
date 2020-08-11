@@ -110,3 +110,7 @@ $route['company/companies-receivables-filter'] = 'company/companiesReceivablesFi
 $route['company/save-threshold'] = 'company/saveThreshold';
 $route['company/get-threshold'] = 'company/getThreshold';
 $route['company/check-threshold'] = 'company/checkThreshold';
+$route['get-work-permit-types'] = 'learners/getWorkPermitTypes';
+$route['get-trade-types'] = 'learners/getTradeTypes';
+$route['get-application-options'] = 'learners/getApplicationOptions';
+$route['check-learner-assigned'] = 'learners/checkLearnerAssigned';

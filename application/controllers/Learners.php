@@ -200,6 +200,87 @@ class Learners extends CI_Controller
         echo json_encode(array( "status" => true, "message" => 'Updated Learner'));exit;
     }
 
+    public function getWorkPermitTypes(){
+        $validToken = $this->validToken();
+        $wpTypes = $this->db->order_by('name', 'asc')->get('work_permit_types');
+        if($wpTypes->num_rows() > 0){
+            http_response_code('200');
+            echo json_encode(array( "status" => true, "message" => 'Success', "data" => $wpTypes->result()));exit;
+        }else{
+            http_response_code('200');
+            echo json_encode(array( "status" => false, "message" => 'WP Types No Rows Found', "data" => null));exit;
+        }
+    }
+
+    public function getApplicationOptions(){
+        $validToken = $this->validToken();
+        $course_db = $this->load->database('courses', true);
+        $res = $course_db->order_by('trade_type_name', 'asc')->get('trade_type');
+        if($res->num_rows() > 0){
+            http_response_code('200');
+            echo json_encode(array( "status" => true, "message" => 'Success', "data" => $res->result()));exit;
+        }else{
+            http_response_code('200');
+            echo json_encode(array( "status" => false, "message" => 'No Rows Found', "data" => null));exit;
+        }
+    }
+
+    public function getTradeTypes(){
+        $validToken = $this->validToken();
+        $course_db = $this->load->database('courses', true);
+        $res = $course_db->order_by('trade_level_name', 'asc')->get('trade_level');
+        if($res->num_rows() > 0){
+            http_response_code('200');
+            echo json_encode(array( "status" => true, "message" => 'Success', "data" => $res->result()));exit;
+        }else{
+            http_response_code('200');
+            echo json_encode(array( "status" => false, "message" => 'No Rows Found', "data" => null));exit;
+        }
+    }
+
+    public function checkLearnerAssigned(){
+        $validToken = $this->validToken();
+        $data = file_get_contents('php://input');
+        $learner = json_decode($data,true);
+        $exists = $this->db->or_where('nric', $learner['id'])
+                    ->or_where('work_permit', $learner['id'])
+                    ->or_where('fin', $learner['id'])
+                    ->get('learner');
+        $count = 0;
+        if($exists->num_rows() > 0){
+            $exists = $exists->row();
+            $learner_id = $exists->learner_id;
+            $scheduling_db = $this->load->database("scheduling", true);
+            $res = $scheduling_db->select("*, e.id as eid")->from("events_learners el")
+                    ->join("events e", "e.id = el.event_id", "left")
+                    ->where("el.learner_id", $learner_id)->get();
+            if($res->num_rows() > 0){
+                foreach($res->result() as $r){
+                    $lres = $this->db->select("*")->from("learners_results")
+                    ->where("event_id", $r->eid)
+                    ->where("learner_id", $r->learner_id)
+                    ->get();
+                    if($lres->num_rows() > 0){
+                        $count++;
+                    }
+                }
+            }else{
+                http_response_code("200");
+                echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data" => null)); exit;
+            }
+            if($count == 0){ //check whether learner has taken exams; If taken, allowed to take another course
+                http_response_code("200");
+                echo json_encode(array("status" => true, "message" => "Pending Training Found", "data" => null)); exit;
+            }else{
+                http_response_code("200");
+                echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data" => null)); exit;
+            }
+        }else{
+            http_response_code("200");
+            echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data" => null)); exit;
+        }
+    }
+
     private function mask($string){
         $strMaskLen = strlen($string) - 4;
         $strMask = "";
