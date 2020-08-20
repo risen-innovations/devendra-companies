@@ -264,7 +264,7 @@ class Company_model extends CI_Model
 		}
 	}
 
-	private function checkUENExists($UEN){
+	private function checkUENExists($uen){
 		$co = $this->db->select('company_id')->from('company')
 				->where('uen',$uen)->get();
 		$hash = null;
@@ -290,7 +290,6 @@ class Company_model extends CI_Model
 		$learner_data['fin'] = $applicationData['applicantFIN'];
 		$learner_data['nationality'] = $applicationData['nationality'];
 		$learner_data['dob'] = $applicationData['dob'];
-		//$learner_data['age'] = $applicationData['age'];
 		$learner_data['sex'] = $applicationData['sex'];
 		$learner_data['contact_no'] = $applicationData['applicantHP'];
 		$learner_data['coretrade_expiry'] = $applicationData['ctexp'];
@@ -347,6 +346,8 @@ class Company_model extends CI_Model
 		if(isset($applicationData['sponsorCompany'])){
 			$app_data['sponsor_company'] = $applicationData['sponsorCompany'];
 		}
+		$app_data['trade_type'] = $applicationData['trade_type'];
+		$app_data['application_options'] = $applicationData['application_option'];
 		$application = $this->db->insert('application', $app_data);
 		
 		http_response_code('200');

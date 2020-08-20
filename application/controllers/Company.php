@@ -490,7 +490,7 @@ class Company extends CI_Controller
 			}else{
 				http_response_code('200');
 				echo json_encode(array("status" => true, 
-							"message" => "Learner Exists for this company already", "data" => false));exit;
+							"message" => "Learner Exists for this company already", "data" => array()));exit;
 			}
 		}else{
 			http_response_code('200');
@@ -602,7 +602,7 @@ class Company extends CI_Controller
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 
-		if(is_null($data)){
+		if(empty($data)){
 			http_response_code('200');
 			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>array()));exit;
 		}else{
@@ -660,10 +660,8 @@ class Company extends CI_Controller
 				$this->db->insert('application_doc',$applicationDoc);
 			}
 			$create = $this->company_model->newApplication($applicationData);
-			if($create){
-				http_response_code('200');
-				echo json_encode(array( "status" => true, "message" => "Success", "data"=>array()));exit;
-			}
+			http_response_code('200');
+			echo json_encode(array( "status" => true, "message" => "Success", "data"=>array()));exit;
 		}
 	}
 
