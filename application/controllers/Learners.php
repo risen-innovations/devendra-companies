@@ -208,7 +208,7 @@ class Learners extends CI_Controller
             echo json_encode(array( "status" => true, "message" => 'Success', "data" => $wpTypes->result()));exit;
         }else{
             http_response_code('200');
-            echo json_encode(array( "status" => false, "message" => 'WP Types No Rows Found', "data" => null));exit;
+            echo json_encode(array( "status" => false, "message" => 'WP Types No Rows Found', "data"=>array()));exit;
         }
     }
 
@@ -221,7 +221,7 @@ class Learners extends CI_Controller
             echo json_encode(array( "status" => true, "message" => 'Success', "data" => $res->result()));exit;
         }else{
             http_response_code('200');
-            echo json_encode(array( "status" => false, "message" => 'No Rows Found', "data" => null));exit;
+            echo json_encode(array( "status" => false, "message" => 'No Rows Found', "data"=>array()));exit;
         }
     }
 
@@ -234,7 +234,7 @@ class Learners extends CI_Controller
             echo json_encode(array( "status" => true, "message" => 'Success', "data" => $res->result()));exit;
         }else{
             http_response_code('200');
-            echo json_encode(array( "status" => false, "message" => 'No Rows Found', "data" => null));exit;
+            echo json_encode(array( "status" => false, "message" => 'No Rows Found', "data"=>array()));exit;
         }
     }
 
@@ -266,18 +266,18 @@ class Learners extends CI_Controller
                 }
             }else{
                 http_response_code("200");
-                echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data" => null)); exit;
+                echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data"=>array())); exit;
             }
             if($count == 0){ //check whether learner has taken exams; If taken, allowed to take another course
                 http_response_code("200");
-                echo json_encode(array("status" => true, "message" => "Pending Training Found", "data" => null)); exit;
+                echo json_encode(array("status" => true, "message" => "Pending Training Found", "data"=>array())); exit;
             }else{
                 http_response_code("200");
-                echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data" => null)); exit;
+                echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data"=>array())); exit;
             }
         }else{
             http_response_code("200");
-            echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data" => null)); exit;
+            echo json_encode(array("status" => false, "message" => "No Pending Training Found", "data"=>array())); exit;
         }
     }
 

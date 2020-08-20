@@ -163,7 +163,7 @@ class Company extends CI_Controller
 		}
 		if(is_null($companies)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'failure',"data" =>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'failure',"data"=>array()));exit;
 		}else{
 			http_response_code('200');
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$companies));exit;
@@ -240,7 +240,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code("200");
 			echo json_encode(array("status" => false
-			, "message" => "No Learners found","data"=>null));exit;
+			, "message" => "No Learners found","data"=>array()));exit;
 		}
 	}
 
@@ -254,13 +254,13 @@ class Company extends CI_Controller
 				->where('lc.old_company_id', $company['company_id'])
 				->group_by('l.learner_id')
 				->get()->result();
-		if(!is_null($left)){
+		if(!empty($left)){
 			http_response_code("200");
 			echo json_encode(array("status" => true, "message" => "Learners Left Found", "data" => $left));exit;
 		}else{
 			http_response_code("200");
 			echo json_encode(array("status" => false
-			, "message" => "No Learners found","data"=>null));exit;
+			, "message" => "No Learners found","data"=>array()));exit;
 		}
 	}
 
@@ -303,11 +303,11 @@ class Company extends CI_Controller
 				echo json_encode(array( "status"=> true, "message" => "Learners Retrieved", "data"=>$data));exit;
 			}else{
 				http_response_code('200');
-				echo json_encode(array( "status"=> false, "message" => "No Learners Found","data"=>null));exit;
+				echo json_encode(array( "status"=> false, "message" => "No Learners Found","data"=>array()));exit;
 			}
 		}else{
 			http_response_code('200');
-			echo json_encode(array( "status"=> false, "message" => "No Learners Found","data"=>null));exit;
+			echo json_encode(array( "status"=> false, "message" => "No Learners Found","data"=>array()));exit;
 		}
 	}
 
@@ -318,7 +318,7 @@ class Company extends CI_Controller
 		$this->db->where('company_id',$deactivate['company_id']);
 		$this->db->update('company',array('status' => 0));
 		http_response_code('200');
-		echo json_encode(array("status" => true, "message" => "Company Deleted", "data"=>null));exit;
+		echo json_encode(array("status" => true, "message" => "Company Deleted", "data"=>array()));exit;
 	}
 
 	public function getSalespersons(){
@@ -392,7 +392,7 @@ class Company extends CI_Controller
 					->get();
 		if($exists->num_rows() > 0){
 			http_response_code('200');
-			echo json_encode(array('status' => false, 'message' => 'UEN already exists', "data" =>null));exit;
+			echo json_encode(array('status' => false, 'message' => 'UEN already exists', "data"=>array()));exit;
 		}
 		$companyData['company_id'] = hash('sha256',$companyData['uen']);
 		//$companyData['sales_person'] = implode(",",$companyData['sales_person']);
@@ -410,7 +410,7 @@ class Company extends CI_Controller
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
 		}else{
 			http_response_code('200');
-			echo json_encode(array('status' => false, 'message' => 'Failed to create new company. Please contact system admin.', "data"=>null));
+			echo json_encode(array('status' => false, 'message' => 'Failed to create new company. Please contact system admin.', "data"=>array()));
 		}
 	}
 
@@ -494,7 +494,7 @@ class Company extends CI_Controller
 			}
 		}else{
 			http_response_code('200');
-			echo json_encode(array("status" => false, "message" => "Learner Does Not Exist", "data" => null));exit;
+			echo json_encode(array("status" => false, "message" => "Learner Does Not Exist", "data"=>array()));exit;
 		}
 	}
 
@@ -505,7 +505,7 @@ class Company extends CI_Controller
 		$this->db->insert("learners_company_change", $change);
 		if($update){
 			http_response_code('200');
-			echo json_encode(array("status" => false, "message" => "Logged Learner Company Change", "data" => null));exit;
+			echo json_encode(array("status" => false, "message" => "Logged Learner Company Change", "data"=>array()));exit;
 		}else{
 			$this->show_error_500();
 		}
@@ -519,7 +519,7 @@ class Company extends CI_Controller
 		$update = $this->db->update("learner", array("company" => $change['company']));
 		if($update){
 			http_response_code('200');
-			echo json_encode(array("status" => true, "message" => "Update", "data" => null));exit;
+			echo json_encode(array("status" => true, "message" => "Update", "data"=>array()));exit;
 		}else{
 			$this->show_error_500();
 		}
@@ -530,16 +530,16 @@ class Company extends CI_Controller
 		$uen = json_decode($data,true);
 		if(is_null($uen)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>array()));exit;
 		}else{
 			$validToken = $this->validToken();
 			$notExists = $this->company_model->checkUEN($uen['uen']);
 			if($notExists === true){
 				http_response_code('200');
-				echo json_encode(array( "status" => true, "message" => "Success", "data"=>null));exit;
+				echo json_encode(array( "status" => true, "message" => "Success", "data"=>array()));exit;
 			}else{
 				http_response_code('200');
-				echo json_encode(array( "status" => false, "message" => "UEN not found", "data"=>null));exit;
+				echo json_encode(array( "status" => false, "message" => "UEN not found", "data"=>array()));exit;
 			}
 		}
 	}
@@ -553,7 +553,7 @@ class Company extends CI_Controller
 					->order_by("datetime_created desc")->limit(1)->get()->row();
 		if(is_null($latest)){
 			http_response_code('200');
-			echo json_encode(array("status" => false, "message" => "No applications found", "data"=>null));exit;
+			echo json_encode(array("status" => false, "message" => "No applications found", "data"=>array()));exit;
 		}else{
 			http_response_code('200');
 			echo json_encode(array( "status" => true, "message" => 'Latest Application on '.$latest->date
@@ -566,7 +566,7 @@ class Company extends CI_Controller
 		$data = file_get_contents('php://input');
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data" =>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>array()));exit;
 		}
 		$learner =  json_decode($data,true);
 		$expiring = $this->db->select("a.company_id, c.company_name, a.learner_id
@@ -604,7 +604,7 @@ class Company extends CI_Controller
 
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>array()));exit;
 		}else{
 			//echo json_encode(array( "status" => false, "message" => $data));exit;
 
@@ -662,7 +662,7 @@ class Company extends CI_Controller
 			$create = $this->company_model->newApplication($applicationData);
 			if($create){
 				http_response_code('200');
-				echo json_encode(array( "status" => true, "message" => "Success", "data"=>null));exit;
+				echo json_encode(array( "status" => true, "message" => "Success", "data"=>array()));exit;
 			}
 		}
 	}
@@ -673,7 +673,7 @@ class Company extends CI_Controller
 
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>array()));exit;
 		}else{
 			//echo json_encode(array( "status" => false, "message" => $data));exit;
 
@@ -731,7 +731,7 @@ class Company extends CI_Controller
 			$create = $this->company_model->updateApplication($applicationData);
 			if($create){
 				http_response_code('200');
-				echo json_encode(array( "status" => true, "message" => "Success","data"=>null));exit;
+				echo json_encode(array( "status" => true, "message" => "Success","data"=>array()));exit;
 			}else{
 				$this->show_error_500();
 			}
@@ -742,7 +742,7 @@ class Company extends CI_Controller
 		$data = file_get_contents('php://input');
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>array()));exit;
 		}else{
 			$validToken = $this->validToken();
 			$applicationData = json_decode($data,true);
@@ -750,7 +750,7 @@ class Company extends CI_Controller
 			$application = $this->company_model->getApplication($applicationData);
 			if($application){
 				http_response_code('200');
-				echo json_encode(array( "status" => true, "message" => "Success", "data"=>null));exit;
+				echo json_encode(array( "status" => true, "message" => "Success", "data"=>array()));exit;
 			}
 		}
 	}
@@ -931,7 +931,7 @@ class Company extends CI_Controller
 		$userData = json_decode($data,true);
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>array()));exit;
 		}else{
 			$status = $this->db->select("status, name")->from("learner")
 						->where("learner_id", $userData["learner_id"])
@@ -944,7 +944,7 @@ class Company extends CI_Controller
 			$update = $this->db->update("learner", array("status" => $newStatus));
 			http_response_code('200');
 			echo json_encode(array( "status" => true
-			, "message" => "Updated ".$status->name."'s Status Successfully", "data"=>null));exit;
+			, "message" => "Updated ".$status->name."'s Status Successfully", "data"=>array()));exit;
 		}
 	}
 
@@ -953,7 +953,7 @@ class Company extends CI_Controller
 		$userData = json_decode($data,true);
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>array()));exit;
 		}else{
 			$validToken = $this->validToken();
 			$id = $this->company_model->getRecordByLearnerId($userData['id']);
@@ -969,7 +969,7 @@ class Company extends CI_Controller
 		$userData = json_decode($data,true);
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request',"data"=>array()));exit;
 		}else{
 			$validToken = $this->validToken();
 			$id = $this->company_model->getRecordByLearnerManagerId($userData['id']);
@@ -1005,7 +1005,7 @@ class Company extends CI_Controller
 		$update = $this->db->update('threshold',array('threshold' => $threshold['filter_by_value']));
 		if($update){
 			http_response_code('200');
-			echo json_encode(array("status" => true, "message" => "Updated Threshold Successfully", "data"=>null));exit;
+			echo json_encode(array("status" => true, "message" => "Updated Threshold Successfully", "data"=>array()));exit;
 		}else{
 			$this->show_error_500();exit;
 		}
@@ -1023,9 +1023,9 @@ class Company extends CI_Controller
 			http_response_code('200');
 			if($receivables > $threshold->threshold){
 				echo json_encode(array("status" => true
-										, "message" => "Exceeded Credit Threshold. Unable to Proceed.", "data"=>null));
+										, "message" => "Exceeded Credit Threshold. Unable to Proceed.", "data"=>array()));
 			}else{
-				echo json_encode(array("status" => false, "message" => "Not Exceeded", "data"=>null));
+				echo json_encode(array("status" => false, "message" => "Not Exceeded", "data"=>array()));
 			}
 		}else{
 			$this->show_error_500();exit;
@@ -1076,7 +1076,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No data found","data"=>null));exit;
+			, "message" => "No data found","data"=>array()));exit;
 			exit;
 		}
 	}
@@ -1139,7 +1139,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No Data found","data"=>null));exit;
+			, "message" => "No Data found","data"=>array()));exit;
 		}
 	}
 
@@ -1149,7 +1149,7 @@ class Company extends CI_Controller
 		$filtered = json_decode($data,true);
 		if(is_null($data)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request', "data"=>array()));exit;
 		}
 		$sales_db = $this->load->database('sales', true);
 		$course_db = $this->load->database('courses', true);
@@ -1208,7 +1208,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No data found","data"=>null));exit;
+			, "message" => "No data found","data"=>array()));exit;
 		}
 	}
 
@@ -1257,7 +1257,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No data found","data"=>null));exit;
+			, "message" => "No data found","data"=>array()));exit;
 		}
 	}
 
@@ -1287,7 +1287,7 @@ class Company extends CI_Controller
 		else
 		{
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'No Remarks added',"data" =>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'No Remarks added',"data"=>array()));exit;
 		}
 
 
@@ -1379,7 +1379,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No event found","data"=>null));exit;
+			, "message" => "No event found","data"=>array()));exit;
 		}
 
 	}
@@ -1421,7 +1421,7 @@ class Company extends CI_Controller
 			else
 			{
 				http_response_code('200');
-				echo json_encode(array("status" => false, "message" => "No data found", "data" =>null));	
+				echo json_encode(array("status" => false, "message" => "No data found", "data"=>array()));	
 			}
 
 	}
@@ -1477,7 +1477,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No event found","data"=>null));exit;
+			, "message" => "No event found","data"=>array()));exit;
 		
 
 		}
@@ -1505,10 +1505,10 @@ class Company extends CI_Controller
 						->update('learners_results', $learnerResult);
 		if($update){
 				echo json_encode(array("status" => true, "message" => "Successfully Updated"
-				, "data" => null));exit;
+				, "data"=>array()));exit;
 		}else{
 			http_response_code('200');
-			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>null));exit;
+			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>array()));exit;
 		}
 		}
 		$insertData = array("learner_id" => $learnerResult['learner_id']
@@ -1528,7 +1528,7 @@ class Company extends CI_Controller
 		else
 		{
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'No Result added',"data" =>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'No Result added',"data"=>array()));exit;
 		}
 
 
@@ -1675,7 +1675,7 @@ class Company extends CI_Controller
 		}
 		else {
 			http_response_code('200');
-			echo json_encode(array("status" => false , "message" => "No Learners found","data"=>null));exit;
+			echo json_encode(array("status" => false , "message" => "No Learners found","data"=>array()));exit;
 		}
 	
 
@@ -1703,11 +1703,11 @@ class Company extends CI_Controller
 			if($update){
 				
 				echo json_encode(array("status" => true, "message" => "Successfully Updated"
-				, "data" => null));exit;
+				, "data"=>array()));exit;
 			}else{
 			
 			http_response_code('200');
-			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>null));exit;
+			echo json_encode(array("status" => false, "message" => "Error Updating","data"=>array()));exit;
 			}
 		}*/
 		$insertData = array("learner_id" => $remarksData['learner_id']
@@ -1726,7 +1726,7 @@ class Company extends CI_Controller
 		else
 		{
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'No Remarks added',"data" =>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'No Remarks added',"data"=>array()));exit;
 		}
 
 		exit;
@@ -1792,7 +1792,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No event found","data"=>null));exit;
+			, "message" => "No event found","data"=>array()));exit;
 		
 
 		}
@@ -1859,7 +1859,7 @@ class Company extends CI_Controller
 		}else{
 			http_response_code('200');
 			echo json_encode(array("status" => false
-			, "message" => "No event found","data"=>null));exit;
+			, "message" => "No event found","data"=>array()));exit;
 		
 
 		}
@@ -1881,7 +1881,7 @@ class Company extends CI_Controller
 			return TRUE;
 		}else{
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'NRIC/PP is already exit. Method not allowed.',"data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'NRIC/PP is already exit. Method not allowed.',"data"=>array()));exit;
 		}
 	}
 
@@ -1906,19 +1906,19 @@ class Company extends CI_Controller
 		$authToken = $this->input->get_request_header('Authorization', TRUE);
 		if(is_null($authToken)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'Bad Request, Auth Token is required.',"data"=>null));exit;
+			echo json_encode(array( "status" => false, "message" => 'Bad Request, Auth Token is required.',"data"=>array()));exit;
 		}else{
 			$checkToken = $account_db->select('*')->get_where('auth_tokens',array('auth_token'=>$authToken))->row();
 
 			if(is_null($checkToken)){
 				http_response_code('200');
-				echo json_encode(array( "status" => false, "message" => 'Invalid Authentication Token.',"data"=>null));exit;
+				echo json_encode(array( "status" => false, "message" => 'Invalid Authentication Token.',"data"=>array()));exit;
 			}
 			$now = time();
 			$expiryDateString = strtotime($checkToken->auth_token_expiry_date);
 			if($expiryDateString < $now){
 				http_response_code('200');
-				echo json_encode(array( "status" => false, "message" => 'Authentication Token has expired.',"data"=>null));exit;
+				echo json_encode(array( "status" => false, "message" => 'Authentication Token has expired.',"data"=>array()));exit;
 			}
 			$decodeJWT = $this->objOfJwt->DecodeToken($checkToken->issued_to);
 			$data = $account_db->select('*')->get_where('accounts',array('user_id'=>$decodeJWT['user_id']))->row();
@@ -1931,23 +1931,23 @@ class Company extends CI_Controller
 
 	private function show_204(){
 		http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => 'Not Content Found.',"data"=>null));exit;
+		echo json_encode(array( "status" => false, "message" => 'Not Content Found.',"data"=>array()));exit;
 	}
 
 	private function show_404(){
 		http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => 'Not Found.',"data"=>null));exit;
+		echo json_encode(array( "status" => false, "message" => 'Not Found.',"data"=>array()));exit;
 	}
 
 	private function show_400(){
 		http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => 'Bad Request.', "data"=>null));exit;
+		echo json_encode(array( "status" => false, "message" => 'Bad Request.', "data"=>array()));exit;
 	}
 
 	private function show_error_500(){
 		http_response_code('200');
 		$message = 'Internal Server Error.';
-		echo json_encode(array( "status" => false, "message" => $message, "data"=>null));exit;
+		echo json_encode(array( "status" => false, "message" => $message, "data"=>array()));exit;
 	}
 
 

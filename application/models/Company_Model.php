@@ -37,7 +37,7 @@ class Company_model extends CI_Model
 			}
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
 		}else{
-			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>null));exit;
+			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>array()));exit;
 		}
 	}
 	
@@ -61,7 +61,7 @@ class Company_model extends CI_Model
 			}
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
 		}else{
-			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>null));exit;
+			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>array()));exit;
 		}
 	}
 
@@ -85,7 +85,7 @@ class Company_model extends CI_Model
 			}
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
 		}else{
-			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>null));exit;
+			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>array()));exit;
 		}
 	}
 
@@ -186,7 +186,8 @@ class Company_model extends CI_Model
 		}
 		
 		if(empty($applications)){
-			$this->show_204();
+			http_response_code('200');
+			echo json_encode(array( "status" => false, "message" => 'No Rows Found',"data" =>array()));exit;
 		}else{
 			http_response_code('200');
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$applications));exit;
@@ -255,7 +256,8 @@ class Company_model extends CI_Model
 			}
 		}
 		if(empty($applications)){
-			$this->show_204();
+			http_response_code('200');
+			echo json_encode(array( "status" => false, "message" => 'No Rows Found',"data" =>array()));exit;
 		}else{
 			http_response_code('200');
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$applications));exit;
@@ -457,7 +459,7 @@ class Company_model extends CI_Model
 			http_response_code('200');
 			$message = 'Deactivated';
 			$status = true;
-			echo json_encode(array( "status" => $status, "message" => $message, "data"=>null));exit;
+			echo json_encode(array( "status" => $status, "message" => $message, "data"=>array()));exit;
 		}else{
 			$this->show_error_500();
 		}
@@ -479,17 +481,17 @@ class Company_model extends CI_Model
 
 	private function show_204(){
 		http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => 'No Content Found.', "data"=>null));exit;
+		echo json_encode(array( "status" => false, "message" => 'No Content Found.', "data"=>array()));exit;
 	}
 
 	private function show_error_404($message){
 		http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => $message, "data"=>null));exit;
+		echo json_encode(array( "status" => false, "message" => $message, "data"=>array()));exit;
 	}
 
 	private function show_404(){
 		http_response_code('200');
-		echo json_encode(array( "status" => false, "message" => 'Company Not Found.', "data"=>null));exit;
+		echo json_encode(array( "status" => false, "message" => 'Company Not Found.', "data"=>array()));exit;
 	}
 
 }
