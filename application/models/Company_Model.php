@@ -229,26 +229,31 @@ class Company_model extends CI_Model
 				->join('trade_type tt','c.trade_type = tt.id', 'left')
 				->where('c.id', $row->course_id);
 				if($searchKeyword['filter_column'] == 'category'){
-					$courses_db->where('tt.id', $searchKeyword['filter_value']);
+					$courses_db->where('c.trade_type', $searchKeyword['filter_value']);
 				}
 				if($searchKeyword['filter_column'] == 'course'){
 					$courses_db->where('c.id', $searchKeyword['filter_value']);
 				}
-				$course_res = $courses_db->get()->row();
-				if(empty($course_res)){
-					$applications = [];
-					echo json_encode($applications);
+				$course_res = $courses_db->get();
+				if($course_res->num_rows() == 0){
+					$applications = array();
+					echo json_encode(array("status" => false, "message" => 'No Rows Found1',"data" => $applications));
 					exit;
+				}else{
+					$course_res = $course_res->row();
 				}
 				$personnel_res = $account_db->select('*')->from('accounts a')
 						->where('a.user_id',$row->created_by)
 						->get()->row();
 				if(empty($personnel_res)){
-					$applications = [];
-					echo json_encode($applications);
+					$applications = array();
+					echo json_encode(array("status" => false, "message" => 'No Rows Found2',"data" => $applications));
 					exit;
 				}
-
+				$learner = $this->db->select('name as learner_name')->from('learner')
+								->where('learner_id', $row->learner_id)
+								->get()->row();
+				$row->name = $learner->learner_name;
 				$row->course_name = $course_res->course_name;
 				$row->trade_type_name = $course_res->trade_type_name;
 				$row->personnel = $personnel_res->name;
@@ -257,7 +262,7 @@ class Company_model extends CI_Model
 		}
 		if(empty($applications)){
 			http_response_code('200');
-			echo json_encode(array( "status" => false, "message" => 'No Rows Found',"data" =>array()));exit;
+			echo json_encode(array( "status" => false, "message" => 'No Rows Found3',"data" =>array()));exit;
 		}else{
 			http_response_code('200');
 			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$applications));exit;
