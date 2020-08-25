@@ -40,6 +40,44 @@ class Company_model extends CI_Model
 			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>array()));exit;
 		}
 	}
+
+	public function getCompanyListsBySales($search){
+		if(is_null($search)){
+			$search['name'] = 'datetime_created';
+			$search['sorting'] = 'DESC';
+			$search['filter_by_name'] = '';
+			$search['filter_by_value'] = '';
+		}
+		if($search['filter_by_name'] == ''){
+			$company = $this->db->select('*')->from('company c')
+			->join('status s','c.status = s.status_id')
+			->where('c.status != 0')
+			->order_by('c.'.$search['name'],$search['sorting'])
+			->get();
+		}else{
+			$company = $this->db->select('*')->from('company c')
+			->join('status s','c.status = s.status_id')
+			->where('c.id',$search['filter_by_value'])
+			->join('status s','c.status = s.status_id')
+			->where('c.status != 0')
+			->order_by('c.'.$search['name'],$search['sorting'])->get();
+		}
+		http_response_code('200');
+		if($company->num_rows() > 0){
+			$data = array();
+			foreach (($company->result()) as $row) {
+				foreach(json_decode($row->sales_person)[0] as $sp){
+					if($sp == $search['filter_by_value']){
+						$data[] = $row;
+						continue;
+					}
+				}
+			}
+			echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$data));exit;
+		}else{
+			echo json_encode(array( "status" => true, "message" => 'No result', "data"=>array()));exit;
+		}
+	}
 	
 	public function getCompanyListsFilter($search){
 		if(is_null($search)){

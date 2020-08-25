@@ -47,6 +47,17 @@ class Company extends CI_Controller
 		$company = $this->company_model->getCompanyLists($search);
 	}
 
+	public function companyListsBySales(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$search = json_decode($data,true);
+		$this->setAuditLog($validToken,15);
+		if(is_null($search)){
+			$this->show_400();
+		}
+		$this->company_model->getCompanyListsBySales($search);
+	}
+
 	public function companyListFilter(){
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
