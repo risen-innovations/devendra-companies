@@ -153,14 +153,17 @@ class Company_model extends CI_Model
 					->where('salesperson_id',$sp)
 					->where('company_id',$id['filter_by_value'])
 					->get();
-			$res = $dt->row();
-			$dateRes = date_create($res->datetime_created);
-			$date = date_format($dateRes, 'd-m-y');
-			$datetime[] = $date;
+			if($dt->num_rows() > 0){
+				$res = $dt->row();
+				$dateRes = date_create($res->datetime_created);
+				$date = date_format($dateRes, 'd-m-y');
+				$datetime[] = $date;
+			}else{
+				$datetime[] = "";
+			}
 		}
 		$details->sales_name = json_encode($sales_names);
 		$details->sales_assigned = json_encode($datetime);
-
 		http_response_code('200');
 		echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$details));exit;
 	}
