@@ -1337,7 +1337,7 @@ class Company extends CI_Controller
 		$event_db = $this->load->database("scheduling", true);
 		if($learnerRemarks['event_type']==3)
 		{
-			$event = $event_db->select('e.id,learner_id')->from('events e')
+			$event = $event_db->select('e.id as id,learner_id')->from('events e')
 					->join("events_learners l","l.event_id = e.id")
 					->join('events_dates ed', 'e.id = ed.event_id', 'left')
 					->where('assessor',$learnerRemarks['assessor'])
@@ -1350,6 +1350,86 @@ class Company extends CI_Controller
 				->where('assessor',$learnerRemarks['assessor'])
 				->where('event_type in (1,2) ')->get();
 		}
+		
+		if($event->num_rows() > 0){
+			
+			//$event_id = $event->result();
+			
+			//foreach($event_id as $events)
+			//{
+				
+				//$eventid=$events->id;
+				
+				//$learner_id = $event_db->select('learner_id')->from('events_learners')
+				//						->where('event_id',$eventid)->get();
+				foreach($event->result() as $learner){
+
+				$learnerName = $this->db->select("l.learner_id, l.name, l.nric, l.fin, l.work_permit as wp, l.company
+									,l.status as learner_status, a.invoice_id, a.course_id, a.sponsor_company
+									,a.status as application_status, a.application_id as application_id, b.filepath as learner_image,
+									c.remarks as learner_remarks, c.datetime_created as remarks_date")->from("learner l")
+									->join("application a", "l.learner_id = a.learner_id", "left")
+									->join("learner_remarks c", "l.learner_id = c.learner_id", "left")
+									->join("application_doc b", "a.application_id = b.application_id", "left")
+									->where("l.learner_id", $learner->learner_id)
+									->get()->row();
+				if(!is_null($learnerName)){
+					
+					$learner->learner_id = $learnerName->learner_id;
+					$learner->event_id = $learner->id;
+					// $learner->value = $learname->learner_id;
+					$learner->learner_name = $learnerName->name;
+					// $learner->learner_image = $name->learner_image;
+					
+					// $learner->learner_nric = $learname->nric;
+					// $learner->nric = $learname->nric;
+					// $learner->learner_fin = $learname->fin;
+					// $learner->fin = $learname->fin;
+					// $learner->learner_wp = $learname->wp;
+					// $learner->wp = $learname->wp;
+					// $learner->learner_status = $learname->learner_status;
+					// $learner->invoice_id = $learname->invoice_id;
+					// $learner->course_id = $learname->course_id;
+					// $learner->application_id = $learname->application_id;
+					$learner->remarks = $learnerName->learner_remarks;
+					$learner->remarks_date = $learnerName->remarks_date;
+					// $learner->sponsor_company = $learname->sponsor_company;
+					// $learner->application_status = $learname->application_status;
+					$company = $this->db->select("company_name")->from("company")
+										->where("company_id", $learnerName->company)->get()->row();
+					$learner->company_name = $company->company_name;	
+					$learner->learner_image = $this->getFile($learnerName->learner_image);						
+					$rows[] =$learner;			
+				}
+				
+												
+			}
+			
+			http_response_code('200');
+			echo json_encode(array("status" => true, "message" => "Success", "data" => $rows));
+		}else{
+			http_response_code('200');
+			echo json_encode(array("status" => false
+			, "message" => "No event found","data"=>array()));exit;
+		}
+
+	}
+
+	public function getExamLearnerByTrainer(){
+		$validToken = $this->validToken();
+		$data = file_get_contents('php://input');
+		$today = date_format(date_create(), "Y-m-d");
+		$learnerRemarks = json_decode($data,true);
+		if(is_null($learnerRemarks)){
+			$this->show_400();
+		}
+		$event_db = $this->load->database("scheduling", true);
+		$event = $event_db->select('e.id as id,learner_id')->from('events e')
+					->join("events_learners l","l.event_id = e.id")
+					->join('events_dates ed', 'e.id = ed.event_id', 'left')
+					->where('assessor',$learnerRemarks['assessor'])
+					->where('ed.date', $today)
+					->get();
 		
 		if($event->num_rows() > 0){
 			

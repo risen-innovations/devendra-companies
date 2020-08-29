@@ -116,3 +116,4 @@ $route['get-trade-types'] = 'learners/getTradeTypes';
 $route['get-application-options'] = 'learners/getApplicationOptions';
 $route['check-learner-assigned'] = 'learners/checkLearnerAssigned';
 $route['company-lists-by-sales'] = 'company/companyListsBySales';
+$route['get-exam-learner-by-trainer'] = 'company/getExamLearnerByTrainer';
