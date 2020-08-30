@@ -392,8 +392,9 @@ class Company extends CI_Controller
 		$validToken = $this->validToken();
 		$data = file_get_contents('php://input');
 		$company = json_decode($data, true);
-		$sql = $this->db->select('*')->from('company')
-				->where('company_id',$company['company_id'])
+		$sql = $this->db->select('*')->from('company c')
+				->join('payment_terms pt','c.payment_terms = pt.id','left')
+				->where('c.company_id',$company['company_id'])
 				->get()->row();
 		http_response_code('200');
 		echo json_encode(array( "status" => true, "message" => 'Success',"data" =>$sql));exit;
