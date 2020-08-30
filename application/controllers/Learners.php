@@ -282,6 +282,134 @@ class Learners extends CI_Controller
         }
     }
 
+    public function getAssessmentResults(){
+        $validToken = $this->validToken();
+        $data = file_get_contents('php://input');
+        $filter = json_decode($data,true);
+        $res = $this->db->select('result, event_id')
+                ->from('learners_results')
+                ->get();
+        if($res->num_rows() > 0){
+            $results = $res->result();
+            $courses = array();
+            $scheduling_db = $this->load->database("scheduling", true);
+            foreach($results as $idx => $r){
+                $event_id = $r->event_id;
+                if($filter['filter_by_value'] != 0){
+                    $event = $scheduling_db->select('id, course_id, datetime_created')
+                            ->from('events')
+                            ->where('id', $event_id)
+                            ->where('course_id', $filter['filter_by_value'])
+                            ->get();
+                }else{
+                    $event = $scheduling_db->select('id, course_id, datetime_created')
+                                ->from('events')->where('id', $event_id)->get();
+                }
+                if($event->num_rows() > 0){
+                    $event = $event->row();
+                    if($r->event_id = $event->id){
+                        $r->course_id = $event->course_id;
+                        $r->datetime_created = $event->datetime_created;
+                    }else{
+                        $r->course_id = null;
+                    }
+                }else{
+                    unset($results[$idx]);
+                }
+            }
+            $mth5 = date_create(date('Y-m-01'))->format('F');
+            $mth4 = date_create(date('Y-m-01'))->modify('first day of last month')->format('F');
+            $mth3 = date_create(date('Y-m-01'))->modify('first day of -2 month')->format('F');
+            $mth2 = date_create(date('Y-m-01'))->modify( 'first day of -3 month' )->format('F');
+            $mth1 = date_create(date('Y-m-01'))->modify( 'first day of -4 month' )->format('F');
+            $assessmentResults = array(
+                                    'retest'=>array($mth1=>0,$mth2=>0,$mth3=>0,$mth4=>0,$mth5=>0),
+                                    'passed'=>array($mth1=>0,$mth2=>0,$mth3=>0,$mth4=>0,$mth5=>0),
+                                    'nyc'=>array($mth1=>0,$mth2=>0,$mth3=>0,$mth4=>0,$mth5=>0),
+                                );
+            foreach($results as $r){
+                if($r->result === '3'){
+                    switch(date_create($r->datetime_created)->format('F')){
+                        case $mth1:
+                            $assessmentResults['retest'][$mth1] += 1;
+                            break;
+                        case $mth2:
+                            $assessmentResults['retest'][$mth2] += 1;
+                            break;
+                        case $mth3:
+                            $assessmentResults['retest'][$mth3] += 1;
+                            break;
+                        case $mth4:
+                            $assessmentResults['retest'][$mth4] += 1;
+                            break;
+                        case $mth5:
+                            $assessmentResults['retest'][$mth5] += 1;
+                            break;
+                    }
+                }
+                if($r->result === '1'){
+                    switch(date_create($r->datetime_created)->format('F')){
+                        case $mth1:
+                            $assessmentResults['passed'][$mth1] += 1;
+                            break;
+                        case $mth2:
+                            $assessmentResults['passed'][$mth2] += 1;
+                            break;
+                        case $mth3:
+                            $assessmentResults['passed'][$mth3] += 1;
+                            break;
+                        case $mth4:
+                            $assessmentResults['passed'][$mth4] += 1;
+                            break;
+                        case $mth5:
+                            $assessmentResults['passed'][$mth5] += 1;
+                            break;
+                    }
+                }
+                if($r->result === '2'){
+                    switch(date_create($r->datetime_created)->format('F')){
+                        case $mth1:
+                            $assessmentResults['nyc'][$mth1] += 1;
+                            break;
+                        case $mth2:
+                            $assessmentResults['nyc'][$mth2] += 1;
+                            break;
+                        case $mth3:
+                            $assessmentResults['nyc'][$mth3] += 1;
+                            break;
+                        case $mth4:
+                            $assessmentResults['nyc'][$mth4] += 1;
+                            break;
+                        case $mth5:
+                            $assessmentResults['nyc'][$mth5] += 1;
+                            break;
+                    }
+                }
+            }
+            $retestResultsArr = array();
+            foreach($assessmentResults['retest'] as $a){
+                array_push($retestResultsArr, $a);
+            }
+            $passedResultsArr = array();
+            foreach($assessmentResults['passed'] as $a){
+                array_push($passedResultsArr, $a);
+            }
+            $nycResultsArr = array();
+            foreach($assessmentResults['nyc'] as $a){
+                array_push($nycResultsArr, $a);
+            }
+            $assessmentResultsArr = array('retest'=>$retestResultsArr, 
+                                    'passed'=>$passedResultsArr,
+                                    'nyc'=>$nycResultsArr);
+            http_response_code("200");
+            echo json_encode(array("status" => true, "message" => "Success", 
+                                "data" => $assessmentResultsArr));exit;
+        }else{
+            http_response_code("200");
+            echo json_encode(array("status" => false, "message" => "No Rows Found", "data" => array()));exit;
+        }
+    }
+
     private function mask($string){
         $strMaskLen = strlen($string) - 4;
         $strMask = "";
