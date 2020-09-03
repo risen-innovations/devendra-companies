@@ -344,6 +344,7 @@ class Company_model extends CI_Model
 		$learner_data['company'] = $UENHash;
 		$learnerExists = $this->db->select("learner_id")->from("learner")
 			->where("nric", $applicationData['applicantNRIC'])
+			->where("nric !=", "-")
 			->get()->num_rows();
 		if($learnerExists <= 0){
 			$learner = $this->db->insert('learner',$learner_data);

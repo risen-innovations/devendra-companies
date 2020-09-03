@@ -501,13 +501,13 @@ class Company extends CI_Controller
 		$validToken  = $this->validToken();
 		$data = file_get_contents('php://input');
 		$learner = json_decode($data,true);
-		$learner['learner_ids']['nric'] == "" ? 
+		$learner['learner_ids']['nric'] == "" || $learner['learner_ids']['nric'] == "-" ? 
 			$learner['learner_ids']['nric'] = "ZZZ" : 
 			$learner['learner_ids']['nric'] = $learner['learner_ids']['nric'];
-		$learner['learner_ids']['fin'] == "" ? 
+		$learner['learner_ids']['fin'] == "" || $learner['learner_ids']['fin'] == "-" ? 
 			$learner['learner_ids']['fin'] = "ZZZ" : 
 			$learner['learner_ids']['fin'] = $learner['learner_ids']['fin'];
-		$learner['learner_ids']['work_permit'] == "" ? 
+		$learner['learner_ids']['work_permit'] == "" || $learner['learner_ids']['work_permit'] == "-" ? 
 			$learner['learner_ids']['work_permit'] = "ZZZ" : 
 			$learner['learner_ids']['work_permit'] = $learner['learner_ids']['work_permit'];
 		$learner_exists = $this->db->select('*')->from('learner')
