@@ -330,6 +330,9 @@ class Company_model extends CI_Model
 		}
 		//learner
 		$learner_data['learner_id'] = hash('sha256',$applicationData['applicantNRIC']);
+		if($applicationData['applicantNRIC'] == "-"){
+			$learner_data['learner_id'] = hash('sha256',$applicationData['applicantFIN']);
+		}
 		$learner_data['name'] = $applicationData['applicantName'];
 		$learner_data['nric'] = $applicationData['applicantNRIC'];
 		$learner_data['work_permit'] = $applicationData['applicantWorkPermit'];
