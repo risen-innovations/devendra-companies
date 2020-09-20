@@ -414,6 +414,22 @@ class Company extends CI_Controller
 		}	
 	}
 
+	private function setCompanyAccId($companyName){
+		$companyNameSegs = explode(" ", $companyName);
+		if(count($companyNameSegs) > 1){
+			$accId = substr($companyNameSegs[0], 0, 1);
+			$accId .= substr($companyNameSegs[1], 0, 1);
+		}else{
+			$accId = substr($companyName, 0, 2);
+		}
+		$id = $this->db->select("company_acc_id")->from("company")
+				->like("company_acc_id", $accId, "after")
+				->get()->num_rows();
+		$accId .= sprintf('%05d', ($id + 1));
+		//echo $accId;
+		return $accId;
+	}
+
 	public function addCompany(){
 		$validToken  = $this->validToken();
 		$data = file_get_contents('php://input');
@@ -429,6 +445,7 @@ class Company extends CI_Controller
 			echo json_encode(array('status' => false, 'message' => 'UEN already exists', "data"=>array()));exit;
 		}
 		$companyData['company_id'] = hash('sha256',$companyData['uen']);
+		$companyData['company_acc_id'] = $this->setCompanyAccId($companyData['company_name']);
 		//$companyData['sales_person'] = implode(",",$companyData['sales_person']);
 		$this->db->insert('company',$companyData);
 		$insert_id = $this->db->insert_id();
