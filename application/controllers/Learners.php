@@ -18,8 +18,8 @@ class Learners extends CI_Controller
 			'region'  => 'ap-southeast-1',
 			'version' => 'latest',
 			'credentials' => [
-				'key'    => "AKIAILFHEMIUXHACESVQ",
-				'secret' => "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"
+				'key'    => "AKIAQAUZKAGO5UVGEST5",
+				'secret' => "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"
 			]
 		]);
 		header('Content-Type: application/json');
