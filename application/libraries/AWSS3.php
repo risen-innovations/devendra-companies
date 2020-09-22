@@ -6,8 +6,8 @@ require './vendor/autoload.php';
     {
         //S3 credentials
         private $region = 'ap-southeast-1';
-        private $key = "AKIAILFHEMIUXHACESVQ";
-        private $secret = "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";
+        private $key = "AKIAQAUZKAGO5UVGEST5";
+        private $secret = "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";
         public function uploadS3($file, $bucket)
         {          
             $file_name = $_FILES['image']['name'];   
